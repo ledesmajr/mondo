@@ -105,6 +105,10 @@ textarea.txt{resize:vertical;min-height:90px;line-height:1.5}
 .ti input.tt{width:108px;flex:none;flex:none;border:1px solid var(--line);border-radius:6px;padding:4px;font-size:13px;background:var(--card)}
 .ghost{position:fixed;z-index:20;pointer-events:none;opacity:.92;box-shadow:0 6px 18px rgba(0,0,0,.18);transform:rotate(-1deg)}
 .plus{border:0;background:none;color:var(--muted);font-size:13px;text-align:left;padding:6px 0;cursor:pointer}
+.reader p.speaking{background:#F3E9CF;border-radius:6px;box-shadow:0 0 0 6px #F3E9CF}
+.player{position:sticky;bottom:calc(env(safe-area-inset-bottom) + 10px);background:var(--ink);color:var(--card);border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:8px;z-index:4}
+.player button{min-height:40px;border:0;border-radius:8px;background:#3A3732;color:var(--card);padding:0 12px;font-size:14px;font-weight:600;cursor:pointer}
+.player button.on{background:var(--card);color:var(--ink)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 92px);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:8px;font-size:14px;z-index:9}
 svg text{font-family:var(--sans)}
 </style>
@@ -208,6 +212,21 @@ function bibleLink(chs){if(!chs||!chs.length)return'#';return'https://www.bible.
 function setRead(code,ch,on,dateKey){var k=bkey(code,ch);if(on){S.bible.read[k]=dateKey||todayKey();var i=bookIndex(code);if(bookRead(i)<BOOKS[i][1])S.bible.current=i;else S.bible.current=(i+1)%BOOKS.length}else delete S.bible.read[k]}
 var BIBLE={};
 function loadBook(code){if(BIBLE[code])return Promise.resolve(BIBLE[code]);return fetch('bible/'+code+'.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){BIBLE[code]=d;return d})}
+var TL={};
+function tlKey(code,ch){return code+'.'+ch}
+function loadTl(code,ch){var k=tlKey(code,ch);if(TL[k])return Promise.resolve(TL[k]);
+ try{var c=localStorage.getItem('mondo.tl.'+k);if(c){TL[k]=JSON.parse(c);return Promise.resolve(TL[k])}}catch(e){}
+ var bn=bookIndex(code)+1,norm=function(vs){if(!vs||!vs.length)throw 0;var out=vs.map(function(v){return [[+v.verse,String(v.text||'').replace(/\s+/g,' ').trim()+' ']]});TL[k]=out;try{localStorage.setItem('mondo.tl.'+k,JSON.stringify(out))}catch(e){}return out};
+ return fetch('https://bible-api.com/data/tagalog/'+code+'/'+ch).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){return norm(j.verses)})
+  .catch(function(){return fetch('https://api.getbible.net/v2/tagalog/'+bn+'/'+ch+'.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){return norm(j.verses)})})}
+var TTS={on:false,paused:false,idx:0,paras:[],rate:1};
+function ttsOK(){return 'speechSynthesis' in window}
+function pickVoice(lang){var vs=speechSynthesis.getVoices()||[],want=lang==='tl'?['fil','tl']:['en-US','en'];for(var i=0;i<want.length;i++){var v=vs.filter(function(x){return x.lang&&x.lang.toLowerCase().indexOf(want[i].toLowerCase())===0})[0];if(v)return v}return null}
+function ttsStop(){if(!ttsOK())return;TTS.on=false;TTS.paused=false;speechSynthesis.cancel();document.querySelectorAll('.reader p.speaking').forEach(function(p){p.classList.remove('speaking')})}
+function ttsSpeak(i){if(!TTS.on||i>=TTS.paras.length){ttsStop();var pb=document.getElementById('pplay');if(pb)pb.textContent='▶ Listen';return}
+ TTS.idx=i;var ps=document.querySelectorAll('.reader p');ps.forEach(function(p,j){p.classList.toggle('speaking',j===i-1)});if(i>0&&ps[i-1])ps[i-1].scrollIntoView({behavior:'smooth',block:'center'});
+ var u=new SpeechSynthesisUtterance(TTS.paras[i]);var lang=S.settings.bibleLang==='tl'?'tl':'en';u.lang=lang==='tl'?'fil-PH':'en-US';var v=pickVoice(lang);if(v)u.voice=v;u.rate=TTS.rate;
+ u.onend=function(){if(TTS.on&&!TTS.paused)ttsSpeak(i+1)};u.onerror=function(){if(TTS.on&&!TTS.paused)ttsSpeak(i+1)};speechSynthesis.speak(u)}
 function verseText(book,ch,v){var out='',on=false;(book[ch-1]||[]).forEach(function(p){p.forEach(function(seg){if(seg[0])on=seg[0]===v;if(on)out+=seg[1]})});return out.replace(/\s+/g,' ').trim()}
 var VOTD=[['PSA',23,1],['ISA',41,10],['PHP',4,13],['JOS',1,9],['PRO',3,5],['MAT',11,28],['ROM',8,28],['JER',29,11],['PSA',46,1],['2CO',12,9],['ISA',40,31],['LAM',3,23],['PHP',4,6],['MAT',6,33],['GAL',6,9],['PSA',119,105],['COL',3,23],['HEB',12,1],['1CO',16,14],['PSA',37,5],['JHN',14,27],['PRO',16,3],['ROM',12,2],['MIC',6,8],['PSA',90,12],['EPH',4,32],['JAS',1,5],['1PE',5,7],['PSA',139,14],['2TI',1,7],['ROM',15,13],['PRO',4,23],['ISA',26,3],['PSA',121,2],['MAT',5,16],['JHN',15,5],['PSA',27,1],['ECC',3,1],['1TH',5,16],['HEB',11,1],['PSA',143,8],['DEU',31,6],['PRO',27,17],['ROM',5,8],['EPH',2,10],['PSA',16,11],['ZEP',3,17],['NEH',8,10],['JHN',16,33],['PSA',55,22]];
 function votdRef(){var d=new Date(),start=new Date(d.getFullYear(),0,0),n=Math.floor((d-start)/864e5);return VOTD[n%VOTD.length]}
@@ -318,7 +337,8 @@ function vToday(){if(todayKey()<startDate())return vBefore();var k=todayKey(),d=
  h+='<div class="between"><div class="brand">'+MARK(20)+'MONDO</div><button class="iconbtn" data-a="go" data-r="settings" aria-label="Settings">'+ic('gear',20)+'</button></div>';
  h+='<div class="between" style="align-items:flex-end"><div><div class="lbl">'+DOW[now.getDay()]+'</div><h1>'+MON[now.getMonth()]+' '+now.getDate()+'</h1></div><button class="btn navy" data-a="go" data-r="plan">Plan tomorrow</button></div>';
  var vr=votdRef();h+='<button class="card" data-a="read" data-b="'+vr[0]+'" data-c="'+vr[1]+'" style="text-align:left;cursor:pointer"><div class="lbl" style="color:var(--faithT)">Word for today · '+esc(refName(vr[0],vr[1],vr[2]))+'</div><div class="votd" id="votd" style="margin-top:4px">'+(BIBLE[vr[0]]?esc(verseText(BIBLE[vr[0]],vr[1],vr[2])):'&nbsp;')+'</div></button>';
- if(!BIBLE[vr[0]])loadBook(vr[0]).then(function(b){var el=document.getElementById('votd');if(el)el.textContent=verseText(b,vr[1],vr[2])}).catch(function(){var el=document.getElementById('votd');if(el)el.textContent='Open MONDO with internet once to load the Bible.'});
+ if(S.settings.bibleLang==='tl')loadTl(vr[0],vr[1]).then(function(c){var t='';c.forEach(function(p){if(p[0][0]===vr[2])t=p[0][1]});var el=document.getElementById('votd');if(el&&t)el.textContent=t.trim()}).catch(function(){});
+ else if(!BIBLE[vr[0]])loadBook(vr[0]).then(function(b){var el=document.getElementById('votd');if(el)el.textContent=verseText(b,vr[1],vr[2])}).catch(function(){var el=document.getElementById('votd');if(el)el.textContent='Open MONDO with internet once to load the Bible.'});
 if(now.getDay()===0&&!(S.weeks[addDays(ws,7)]&&S.weeks[addDays(ws,7)].targets))h+='<button class="card" data-a="go" data-r="week" style="text-align:left;cursor:pointer;border-color:var(--plan)"><div class="lbl" style="color:var(--plan)">It\'s Sunday</div><div style="font-size:16px;margin-top:2px">Look back at this week and plan the next one</div></button>';
  else if(!S.weeks[ws]||!S.weeks[ws].targets)h+='<button class="card" data-a="go" data-r="week" style="text-align:left;cursor:pointer;border-color:var(--plan)"><div class="lbl" style="color:var(--plan)">This week</div><div style="font-size:16px;margin-top:2px">Set your targets for the week</div></button>';
  h+='<div class="card"><label class="small muted" for="intent">Today I want to be</label><input id="intent" class="txt serif" style="font-style:italic;font-size:18px" placeholder="patient, focused, present" data-path="days.'+k+'.intention" value="'+esc(d.intention)+'"></div>';
@@ -427,16 +447,22 @@ function vBible(){var read=Object.keys(S.bible.read).length,ot=readCount(0,OT_CO
  for(var i=from;i<to;i++){var r=bookRead(i),tot=BOOKS[i][1];h+='<button class="item" style="width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left;cursor:pointer;padding:0" data-a="book" data-i="'+i+'"><span class="x"'+(i===bi?' style="font-weight:600"':'')+'>'+esc(BOOKS[i][0])+'</span><span class="bar" style="width:80px"><i style="width:'+(r/tot*100)+'%;background:var(--faith)"></i></span><span class="small" style="width:56px;text-align:right;'+(r===tot?'color:var(--home);font-weight:600':'color:var(--muted)')+'">'+(r===tot?'Done':r+' / '+tot)+'</span></button>'}
  return h+'</div></div>'+tabbar()}
 
-function vRead(){var code=route.b,ch=+route.c,bi=bookIndex(code),b=BOOKS[bi],book=BIBLE[code],read=isRead(code,ch);
+function vRead(){var code=route.b,ch=+route.c,bi=bookIndex(code),b=BOOKS[bi],lang=S.settings.bibleLang==='tl'?'tl':'en',book=BIBLE[code],tl=TL[tlKey(code,ch)],read=isRead(code,ch);
  var prev=ch>1?[code,ch-1]:(bi>0?[BOOKS[bi-1][2],BOOKS[bi-1][1]]:null),next=ch<b[1]?[code,ch+1]:(bi<BOOKS.length-1?[BOOKS[bi+1][2],1]:null);
  var h='<div class="screen noTabs" style="gap:10px"><div class="between" style="min-height:44px"><button class="btn link" data-a="go" data-r="'+(route.from||'bible')+'">'+ic('left',18)+'Back</button><div class="row" style="gap:6px"><button class="iconbtn" data-a="rsize" data-d="-1" aria-label="Smaller text" style="font-size:14px">A</button><button class="iconbtn" data-a="rsize" data-d="1" aria-label="Larger text" style="font-size:20px">A</button></div></div>';
- h+='<div><div class="lbl" style="color:var(--faithT)">World English Bible</div><h1>'+esc(b[0])+' '+ch+'</h1></div>';
- if(!book){loadBook(code).then(function(){if(route.name==='read'&&route.b===code)render(true)}).catch(function(){var el=document.getElementById('rd');if(el)el.innerHTML='<div class="empty">Could not load this book. Connect to the internet once and try again.</div>'});h+='<div id="rd" class="empty">Loading...</div>'}
- else{h+='<div class="reader" style="--rs:'+(S.settings.readSize||19)+'px">'+(book[ch-1]||[]).map(function(p){return '<p>'+p.map(function(seg){return (seg[0]?'<sup>'+seg[0]+'</sup>':'')+esc(seg[1])}).join('')+'</p>'}).join('')+'</div>'}
+ h+='<div class="seg"><button class="'+(lang==='en'?'on':'')+'" data-a="blang" data-l="en">English</button><button class="'+(lang==='tl'?'on':'')+'" data-a="blang" data-l="tl">Tagalog</button></div>';
+ h+='<div><div class="lbl" style="color:var(--faithT)">'+(lang==='tl'?'Ang Dating Biblia (1905)':'World English Bible')+'</div><h1>'+esc(b[0])+' '+ch+'</h1></div>';
+ var paras=null;
+ if(lang==='tl'){if(tl)paras=tl;else{loadTl(code,ch).then(function(){if(route.name==='read'&&route.b===code&&+route.c===ch)render(true)}).catch(function(){var el=document.getElementById('rd');if(el)el.innerHTML='<div class="empty">Could not load the Tagalog text. Tagalog chapters download the first time you open them, so connect to the internet and try again. (Inside the Claude app, Tagalog may be blocked. It works in the MONDO app on your home screen.)</div>'})}}
+ else{if(book)paras=book[ch-1]||[];else loadBook(code).then(function(){if(route.name==='read'&&route.b===code)render(true)}).catch(function(){var el=document.getElementById('rd');if(el)el.innerHTML='<div class="empty">Could not load this book. Connect to the internet once and try again.</div>'})}
+ if(!paras)h+='<div id="rd" class="empty">Loading...</div>';
+ else{h+='<div class="reader" style="--rs:'+(S.settings.readSize||19)+'px">'+paras.map(function(p){return '<p>'+p.map(function(seg){return (seg[0]?'<sup>'+seg[0]+'</sup>':'')+esc(seg[1])}).join('')+'</p>'}).join('')+'</div>';
+  TTS.paras=[b[0]+(lang==='tl'?', kabanata ':', chapter ')+ch+'.'].concat(paras.map(function(p){return p.map(function(seg){return seg[1]}).join('').replace(/\s+/g,' ').trim()}));
+  if(ttsOK())h+='<div class="player"><button id="pplay" data-a="tplay">'+(TTS.on&&!TTS.paused?'❚❚ Pause':'▶ Listen')+'</button><button data-a="tstop">■ Stop</button><span style="flex:1"></span><button data-a="trate" class="on" aria-label="Reading speed">'+TTS.rate+'x</button></div>'}
  h+='<button class="btn block '+(read?'':'dark')+'" data-a="readMark" data-b="'+code+'" data-c="'+ch+'">'+(read?'Read ✓ (tap to undo)':'Mark '+esc(b[0])+' '+ch+' as read')+'</button>';
  h+='<div class="row" style="gap:8px">'+(prev?'<button class="btn" style="flex:1" data-a="read" data-b="'+prev[0]+'" data-c="'+prev[1]+'">'+ic('left',16)+esc(refName(prev[0],prev[1]))+'</button>':'<span style="flex:1"></span>')+(next?'<button class="btn" style="flex:1" data-a="read" data-b="'+next[0]+'" data-c="'+next[1]+'">'+esc(refName(next[0],next[1]))+ic('right',16)+'</button>':'')+'</div>';
  h+='<button class="btn link sm" data-a="openJournal" data-k="'+todayKey()+'">Write a reflection</button>';
- h+='<div class="small muted">Scripture from the World English Bible (public domain).</div>';
+ h+='<div class="small muted">'+(lang==='tl'?'Kasulatan mula sa Ang Dating Biblia (1905), public domain.':'Scripture from the World English Bible (public domain).')+'</div>';
  return h+'</div>'}
 function vFitness(){var tk=todayKey(),ws=weekStart(tk),st=weekStats(ws),tg=targetsFor(ws),plan=S.settings.plan7;
  var h='<div class="screen"><div class="between" style="align-items:flex-end"><h1>Fitness</h1><span class="small muted">'+st.gym+' of '+tg.gym+' this week</span></div>';
@@ -497,7 +523,7 @@ function vSettings(){var s=S.settings;
  h+='<div class="card"><div class="lbl" style="margin-bottom:4px">My routines</div><div class="small muted" style="margin-bottom:6px">Activities that repeat on set days, like Church on Sunday or Grade papers on weekdays. They appear on days you haven\'t planned yet.</div>'+
   ((S.routines||[]).length?(S.routines||[]).map(function(r){return '<div class="item"><span class="c" style="background:'+CAT[r.cat]+'"></span><span class="x">'+esc(r.text)+'<br><span class="small muted">'+(r.time?t12(r.time)+' · ':'')+(r.days.length===7?'Every day':r.days.map(function(d){return DOW[d].slice(0,3)}).join(', '))+'</span></span><button class="btn link sm" data-a="rmR" data-id="'+r.id+'">Remove</button></div>'}).join(''):'<div class="empty">No routines yet.</div>')+
   '<div style="border-top:1px solid var(--rule2);padding-top:10px;margin-top:4px;display:flex;flex-direction:column;gap:8px"><input class="field" id="rText" placeholder="Activity, e.g. Church" aria-label="Routine name"><div class="row" style="gap:8px"><select id="rCat" class="field" aria-label="Category">'+CATS.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('')+'</select><input id="rTime" type="time" class="field" aria-label="Time"></div><div class="row" style="gap:4px;justify-content:space-between">'+[1,2,3,4,5,6,0].map(function(i){var x=dl[i];var on=(ui.rDays||[]).indexOf(i)>=0;return '<button class="chip'+(on?' on':'')+'" style="width:40px;justify-content:center;padding:0" data-a="rDay" data-i="'+i+'" aria-label="'+DOW[i]+'" aria-pressed="'+on+'">'+x+'</button>'}).join('')+'</div><button class="btn dark" data-a="addR">Add routine</button></div></div>';
- h+='<div class="card"><div class="between" style="min-height:52px"><label for="bv">Bible app version number</label><input id="bv" class="field" style="width:90px" data-path="settings.bibleVersion" value="'+esc(s.bibleVersion)+'"></div><div class="small muted">MONDO has the World English Bible built in. This number is only for the optional YouVersion link. 111 is NIV, 1 is KJV.</div></div>';
+ h+='<div class="card"><div class="between" style="min-height:52px"><label for="bv">Bible app version number</label><input id="bv" class="field" style="width:90px" data-path="settings.bibleVersion" value="'+esc(s.bibleVersion)+'"></div><div class="small muted">MONDO has the World English Bible built in, plus Ang Dating Biblia (1905) in Tagalog (downloads as you read). This number is only for the optional YouVersion link. 111 is NIV, 1 is KJV.</div></div>';
  h+='<div class="card"><div class="lbl" style="margin-bottom:4px">Your data</div><div class="small muted" style="margin-bottom:10px">'+esc(cloudText())+' A backup file is still a good idea once in a while.'+(S.lastBackup?' Last backup: '+new Date(S.lastBackup).toLocaleDateString()+'.':'')+(storageOK?'':' <b style="color:var(--bodyT)">Warning: saving failed on this device.</b>')+'</div>'+
   '<div class="row" style="gap:8px"><button class="btn dark" style="flex:1" data-a="export">Back up</button><button class="btn" style="flex:1" data-a="import">Restore</button></div>'+
   '<button class="btn link sm" style="margin-top:12px;color:var(--bodyT)" data-a="erase">'+(ui.eraseArm?'Tap again to erase everything':'Erase all data')+'</button></div>';
@@ -508,7 +534,7 @@ function vSettings(){var s=S.settings;
 var VIEWS={read:vRead,setup:vSetup,today:vToday,plan:vPlan,week:vWeek,calendar:vCalendar,day:vDay,progress:vProgress,bible:vBible,fitness:vFitness,journal:vJournal,dinner:vDinner,settings:vSettings};
 var app=document.getElementById('app');
 function render(keepScroll){var y=window.scrollY;app.innerHTML=(VIEWS[route.name]||vToday)();if(keepScroll)window.scrollTo(0,y);else window.scrollTo(0,0)}
-function go(r,extra){route={name:r};for(var k in extra||{})route[k]=extra[k];if(r!=='plan'&&r!=='dinner')ui.draft=null;if(r!=='settings')ui.eraseArm=false;ui.edit=null;render(false)}
+function go(r,extra){ttsStop();route={name:r};for(var k in extra||{})route[k]=extra[k];if(r!=='plan'&&r!=='dinner')ui.draft=null;if(r!=='settings')ui.eraseArm=false;ui.edit=null;render(false)}
 function toast(msg){document.querySelectorAll('.toast').forEach(function(x){x.remove()});var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},1800)}
 function setPath(path,val){var p=path.split('.'),o=S;for(var i=0;i<p.length-1;i++){if(o[p[i]]==null||typeof o[p[i]]!=='object')o[p[i]]={};o=o[p[i]]}o[p[p.length-1]]=val;save()}
 function findItem(k,id){var d=S.days[k];if(!d)return null;for(var i=0;i<d.items.length;i++)if(d.items[i].id===id)return d.items[i];return null}
@@ -536,6 +562,12 @@ var A={
  setCurrent:function(el){S.bible.current=+el.dataset.i;save();render(true);toast('Next reading updated')},
  read:function(el){var from=route.name==='read'?route.from:route.name;go('read',{b:el.dataset.b,c:el.dataset.c,from:from==='today'||from==='bible'||from==='journal'?from:'bible'})},
  readMark:function(el){var code=el.dataset.b,c=+el.dataset.c,on=!isRead(code,c),tk=todayKey();setRead(code,c,on,tk);var d=S.days[tk];if(d)d.items.forEach(function(i){if(i.kind==='bible'&&i.chapters)i.done=i.chapters.every(function(x){return isRead(x[0],x[1])})});if(on)tickBibleToday();save();render(true);if(on)toast(refName(code,c)+' marked read')},
+ blang:function(el){ttsStop();S.settings.bibleLang=el.dataset.l;save();render(true)},
+ tplay:function(el){if(!ttsOK())return;if(TTS.on&&!TTS.paused){TTS.paused=true;speechSynthesis.cancel();el.textContent='▶ Resume';return}
+  if(TTS.on&&TTS.paused){TTS.paused=false;el.textContent='❚❚ Pause';ttsSpeak(TTS.idx);return}
+  TTS.on=true;TTS.paused=false;el.textContent='❚❚ Pause';if(S.settings.bibleLang==='tl'&&!pickVoice('tl')&&!S.tlVoiceWarned){S.tlVoiceWarned=1;save();toast('No Filipino voice on this phone. It will read with the default voice.')}ttsSpeak(0)},
+ tstop:function(){ttsStop();var pb=document.getElementById('pplay');if(pb)pb.textContent='▶ Listen'},
+ trate:function(el){TTS.rate=TTS.rate===1?1.2:TTS.rate===1.2?0.8:1;el.textContent=TTS.rate+'x';if(TTS.on&&!TTS.paused){speechSynthesis.cancel();ttsSpeak(TTS.idx)}},
  rsize:function(el){S.settings.readSize=Math.max(15,Math.min(26,(S.settings.readSize||19)+2*(+el.dataset.d)));save();render(true)},
  bt:function(el){ui.bibleT=+el.dataset.t;render(true)},
  book:function(el){ui.book=+el.dataset.i;render(false)},
