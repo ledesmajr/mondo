@@ -148,7 +148,7 @@ function keyOf(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDa
 function parseKey(k){var p=k.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
 function addDays(k,n){var d=parseKey(k);d.setDate(d.getDate()+n);return keyOf(d)}
 function todayKey(){return keyOf(new Date())}
-function weekStart(k){var d=parseKey(k);d.setDate(d.getDate()-d.getDay());return keyOf(d)}
+function weekStart(k){var d=parseKey(k);d.setDate(d.getDate()-((d.getDay()+6)%7));return keyOf(d)}
 function shortDate(k){var d=parseKey(k);return MON[d.getMonth()].slice(0,3)+' '+d.getDate()}
 function longDate(k){var d=parseKey(k);return DOW[d.getDay()]+', '+MON[d.getMonth()]+' '+d.getDate()}
 function t12(hm,short){if(!hm)return'';var p=hm.split(':'),h=+p[0],m=p[1];var ap=h>=12?'PM':'AM';h=h%12||12;return short?(h+':'+m):(h+':'+m+' '+ap)}
@@ -183,8 +183,9 @@ function cloudPush(){if(!cloud.ready)return;clearTimeout(cloud.timer);cloud.time
 function setCloud(st){if(cloud.status===st)return;cloud.status=st;if(route.name==='settings')render(true)}
 function cloudText(){return {ok:'Saved to your Claude account. Open MONDO on any device signed in to Claude and your progress is there.',loading:'Loading your data...',local:'Saved on this device only.',error:'Could not reach your Claude account. Changes are saved on this device and will sync when it reconnects.',full:'Your Claude storage for MONDO is full. Back up, then contact support.'}[cloud.status]}
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+function migrateWeeks(){if(S.weekMon)return false;var nw={};for(var w in S.weeks){var d=parseKey(w),k=d.getDay()===0?addDays(w,1):w;if(!nw[k])nw[k]=S.weeks[w]}S.weeks=nw;S.weekMon=1;return true}
 function migrateBible(){var tk=keyOf(new Date()),ch=false;for(var k in S.days){if(k<tk)continue;S.days[k].items.forEach(function(i){if(i.kind==='bible'&&i.chapters&&!i.done){i.text='Bible reading';delete i.chapters;ch=true}})}return ch}
-if(applyFresh()|migrateBible()){try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}}
+if(applyFresh()|migrateBible()|migrateWeeks()){try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}}
 
 var route={name:S.setup?'today':'setup'};
 var ui={calMonth:null,bibleT:1,book:null,dinnerKind:'quick',dinnerIdx:0,q:'',draft:null,eraseArm:false};
@@ -310,7 +311,7 @@ function vSetup(){var s=S.settings;
  '<div class="card"><div class="lbl" style="margin-bottom:6px">Weekly workouts</div>'+workoutSelects()+'</div>'+
  '<div class="muted small">Your data stays on this phone. Use Settings → Back up to save a copy.</div>'+
  '<button class="btn dark block" data-a="finishSetup">Start MONDO</button></div>'}
-function workoutSelects(){return DOW.map(function(dn,i){return '<div class="between" style="min-height:48px;border-bottom:1px solid var(--rule2)"><label for="w_'+i+'">'+dn+'</label><select id="w_'+i+'" class="field" style="width:140px" data-plan7="'+i+'">'+Object.keys(allW()).map(function(w){return '<option value="'+w+'"'+(S.settings.plan7[i]===w?' selected':'')+'>'+esc(wName(w))+'</option>'}).join('')+'</select></div>'}).join('')}
+function workoutSelects(){return [1,2,3,4,5,6,0].map(function(i){var dn=DOW[i];return '<div class="between" style="min-height:48px;border-bottom:1px solid var(--rule2)"><label for="w_'+i+'">'+dn+'</label><select id="w_'+i+'" class="field" style="width:140px" data-plan7="'+i+'">'+Object.keys(allW()).map(function(w){return '<option value="'+w+'"'+(S.settings.plan7[i]===w?' selected':'')+'>'+esc(wName(w))+'</option>'}).join('')+'</select></div>'}).join('')}
 
 function vToday(){if(todayKey()<startDate())return vBefore();var k=todayKey(),d=getDay(k,true),ws=weekStart(k),st=weekStats(ws),tg=targetsFor(ws),now=new Date(),hm=pad(now.getHours())+':'+pad(now.getMinutes());
  var h='<div class="screen">';
@@ -318,7 +319,8 @@ function vToday(){if(todayKey()<startDate())return vBefore();var k=todayKey(),d=
  h+='<div class="between" style="align-items:flex-end"><div><div class="lbl">'+DOW[now.getDay()]+'</div><h1>'+MON[now.getMonth()]+' '+now.getDate()+'</h1></div><button class="btn navy" data-a="go" data-r="plan">Plan tomorrow</button></div>';
  var vr=votdRef();h+='<button class="card" data-a="read" data-b="'+vr[0]+'" data-c="'+vr[1]+'" style="text-align:left;cursor:pointer"><div class="lbl" style="color:var(--faithT)">Word for today · '+esc(refName(vr[0],vr[1],vr[2]))+'</div><div class="votd" id="votd" style="margin-top:4px">'+(BIBLE[vr[0]]?esc(verseText(BIBLE[vr[0]],vr[1],vr[2])):'&nbsp;')+'</div></button>';
  if(!BIBLE[vr[0]])loadBook(vr[0]).then(function(b){var el=document.getElementById('votd');if(el)el.textContent=verseText(b,vr[1],vr[2])}).catch(function(){var el=document.getElementById('votd');if(el)el.textContent='Open MONDO with internet once to load the Bible.'});
- if(!S.weeks[ws]||!S.weeks[ws].targets)h+='<button class="card" data-a="go" data-r="week" style="text-align:left;cursor:pointer;border-color:var(--plan)"><div class="lbl" style="color:var(--plan)">This week</div><div style="font-size:16px;margin-top:2px">Set your targets for the week</div></button>';
+if(now.getDay()===0&&!(S.weeks[addDays(ws,7)]&&S.weeks[addDays(ws,7)].targets))h+='<button class="card" data-a="go" data-r="week" style="text-align:left;cursor:pointer;border-color:var(--plan)"><div class="lbl" style="color:var(--plan)">It\'s Sunday</div><div style="font-size:16px;margin-top:2px">Look back at this week and plan the next one</div></button>';
+ else if(!S.weeks[ws]||!S.weeks[ws].targets)h+='<button class="card" data-a="go" data-r="week" style="text-align:left;cursor:pointer;border-color:var(--plan)"><div class="lbl" style="color:var(--plan)">This week</div><div style="font-size:16px;margin-top:2px">Set your targets for the week</div></button>';
  h+='<div class="card"><label class="small muted" for="intent">Today I want to be</label><input id="intent" class="txt serif" style="font-style:italic;font-size:18px" placeholder="patient, focused, present" data-path="days.'+k+'.intention" value="'+esc(d.intention)+'"></div>';
  var chips=[['Gym',st.gym,tg.gym,'var(--body)'],['Bible',st.bible,tg.bible,'var(--faith)'],['Family',st.family,tg.family,'var(--home)'],['Bed by '+t12(S.settings.bed,true).split(':')[0],st.bed,tg.bed,'var(--rest)']];
  h+='<div><div class="between"><div class="lbl">This week</div><button class="btn link sm" data-a="go" data-r="progress">'+ic('chart',16)+'Progress</button></div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:6px">'+chips.map(function(c){var p=c[2]?Math.min(100,Math.round(c[1]/c[2]*100)):0;return '<div class="card" style="padding:8px"><div class="small muted">'+c[0]+'</div><div style="font-weight:600">'+c[1]+' of '+c[2]+'</div><div class="bar" style="margin-top:6px"><i style="width:'+p+'%;background:'+c[3]+'"></i></div></div>'}).join('')+'</div></div>';
@@ -361,7 +363,7 @@ function vPlan(){var t=addDays(todayKey(),1),k=todayKey(),today=k>=startDate()?g
  h+='<button class="btn dark block" data-a="savePlan">Save tomorrow</button>';
  return h+'</div>'}
 
-function vWeek(){var tk=todayKey(),cur=weekStart(tk);var ws=route.ws||((S.weeks[cur]&&S.weeks[cur].targets&&new Date().getDay()===0)?cur:(S.weeks[cur]&&S.weeks[cur].targets?addDays(cur,7):cur));
+function vWeek(){var tk=todayKey(),cur=weekStart(tk);var ws=route.ws||(new Date().getDay()===0||(S.weeks[cur]&&S.weeks[cur].targets)?addDays(cur,7):cur);
  var last=addDays(ws,-7),lst=weekStats(last),ltg=targetsFor(last),w=S.weeks[ws]||{},tg=w.targets||JSON.parse(JSON.stringify(targetsFor(last)));
  if(!ui.wt||ui.wt.ws!==ws)ui.wt={ws:ws,t:tg};var T=ui.wt.t;
  var h='<div class="screen noTabs">'+back('today','Close');
@@ -376,13 +378,13 @@ function vWeek(){var tk=todayKey(),cur=weekStart(tk);var ws=route.ws||((S.weeks[
  return h+'</div>'}
 
 function vCalendar(){var tk=todayKey();if(!ui.calMonth)ui.calMonth=tk.slice(0,7);var p=ui.calMonth.split('-'),y=+p[0],m=+p[1]-1,first=new Date(y,m,1),days=new Date(y,m+1,0).getDate();
- var cells='';for(var i=0;i<first.getDay();i++)cells+='<div></div>';
+ var cells='';for(var i=0;i<(first.getDay()+6)%7;i++)cells+='<div></div>';
  for(var dd=1;dd<=days;dd++){var k=y+'-'+pad(m+1)+'-'+pad(dd),lv=dayLevel(k),st='';
   if(lv==='full')st='background:var(--ink);color:var(--card);font-weight:600';else if(lv==='some')st='background:#CFC6B6';else if(lv==='rest')st='border-color:var(--line);color:var(--muted)';
   if(k===tk)st+=';border:2px solid var(--plan);font-weight:600';
   cells+='<button class="cal" style="'+st+'" data-a="openDay" data-k="'+k+'" aria-label="'+longDate(k)+'">'+dd+'</button>'}
  var h='<div class="screen"><div class="between"><button class="iconbtn" data-a="mon" data-d="-1" aria-label="Previous month">'+ic('left',18)+'</button><h1 style="font-size:24px">'+MON[m]+' '+y+'</h1><button class="iconbtn" data-a="mon" data-d="1" aria-label="Next month">'+ic('right',18)+'</button></div>';
- h+='<div class="card" style="padding:12px"><div class="grid7 small muted" style="text-align:center;font-weight:600;margin-bottom:6px"><div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div></div><div class="grid7">'+cells+'</div></div>';
+ h+='<div class="card" style="padding:12px"><div class="grid7 small muted" style="text-align:center;font-weight:600;margin-bottom:6px"><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div></div><div class="grid7">'+cells+'</div></div>';
  h+='<div class="row small muted" style="gap:16px;flex-wrap:wrap"><span class="row" style="gap:6px"><span style="width:14px;height:14px;background:var(--ink);border-radius:3px"></span>All done</span><span class="row" style="gap:6px"><span style="width:14px;height:14px;background:#CFC6B6;border-radius:3px"></span>Some done</span><span class="row" style="gap:6px"><span style="width:14px;height:14px;border:1px solid var(--line);border-radius:3px"></span>Rest day</span></div>';
  var ws=weekStart(tk),st2=weekStats(ws);
  h+='<button class="card between" data-a="go" data-r="progress" style="cursor:pointer;text-align:left"><div><div class="lbl">This week</div><div style="font-size:16px;margin-top:2px">'+(st2.pct==null?'No days logged yet':st2.pct+'% of your plan done')+'</div></div><span class="row" style="color:var(--plan);font-weight:600;gap:4px">'+ic('chart',18)+'Progress</span></button>';
@@ -403,7 +405,7 @@ function vDay(){var k=route.k,d=S.days[k],tk=todayKey();
 function vProgress(){var tk=todayKey(),cur=weekStart(tk),wks=[];for(var i=7;i>=0;i--)wks.push(addDays(cur,-7*i));
  var stats=wks.map(weekStats),labels=wks.map(function(w){var d=parseKey(w);return (d.getMonth()+1)+'/'+d.getDate()});
  var read=Object.keys(S.bible.read).length,ot=readCount(0,OT_COUNT),nt=readCount(OT_COUNT,BOOKS.length);
- var h='<div class="screen">'+back('calendar','Calendar')+'<h1>Progress</h1><div class="muted small">Last 8 weeks. Each bar is one week, starting Sunday.</div>';
+ var h='<div class="screen">'+back('calendar','Calendar')+'<h1>Progress</h1><div class="muted small">Last 8 weeks. Each bar is one week, Monday to Sunday.</div>';
  h+='<div class="card"><div class="lbl">Consistency</div><div class="small muted">% of planned items done</div>'+barChart(stats.map(function(s){return s.pct}),labels,'#22201C',{max:100,suffix:'%',label:'Consistency by week'})+'</div>';
  h+='<div class="card"><div class="lbl" style="color:var(--faithT)">Bible chapters per week</div>'+barChart(stats.map(function(s){return s.bible}),labels,'#A8761A',{goal:targetsFor(cur).bible,label:'Bible chapters by week'})+
    '<div class="between small" style="margin-top:6px"><span>Whole Bible</span><span><b>'+read+'</b> of '+TOTAL_CH+' ('+Math.round(read/TOTAL_CH*100)+'%)</span></div><div class="bar" style="margin-top:4px"><i style="width:'+(read/TOTAL_CH*100)+'%;background:var(--faith)"></i></div><div class="row small muted" style="gap:16px;margin-top:6px"><span>Old Testament '+ot+' / 929</span><span>New Testament '+nt+' / 260</span></div></div>';
@@ -440,9 +442,9 @@ function vFitness(){var tk=todayKey(),ws=weekStart(tk),st=weekStats(ws),tg=targe
  var h='<div class="screen"><div class="between" style="align-items:flex-end"><h1>Fitness</h1><span class="small muted">'+st.gym+' of '+tg.gym+' this week</span></div>';
  h+='<div class="card" style="display:flex;justify-content:space-between;padding:12px 8px">';
  for(var i=0;i<7;i++){var k=addDays(ws,i),d=S.days[k],done=d&&(d.workout||d.items.some(function(x){return x.kind==='gym'&&x.done})),rest=d&&d.rest,isT=k===tk;
-  var sty=done?'background:var(--bodyT);color:var(--card);font-weight:600':(isT?'border:2px solid var(--bodyT);color:var(--bodyT)':(rest||plan[i]==='rest'?'border:1px dashed var(--line)':'border:1px solid var(--line)'));
-  var lab=d&&d.workout?wName(d.workout.type):wName(plan[i]);
-  h+='<div style="display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;'+(isT?'color:var(--ink);font-weight:600':'color:var(--muted)')+'">'+DOW[i][0]+'<span style="width:34px;height:34px;border-radius:17px;display:flex;align-items:center;justify-content:center;'+sty+'">'+parseKey(k).getDate()+'</span>'+lab+'</div>'}
+  var sty=done?'background:var(--bodyT);color:var(--card);font-weight:600':(isT?'border:2px solid var(--bodyT);color:var(--bodyT)':(rest||plan[(i+1)%7]==='rest'?'border:1px dashed var(--line)':'border:1px solid var(--line)'));
+  var lab=d&&d.workout?wName(d.workout.type):wName(plan[(i+1)%7]);
+  h+='<div style="display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;'+(isT?'color:var(--ink);font-weight:600':'color:var(--muted)')+'">'+DOW[(i+1)%7][0]+'<span style="width:34px;height:34px;border-radius:17px;display:flex;align-items:center;justify-content:center;'+sty+'">'+parseKey(k).getDate()+'</span>'+lab+'</div>'}
  h+='</div>';
  var tw=(S.days[tk]||{}).workout;
  h+='<div><div class="lbl" style="margin-bottom:6px">Log today\'s session</div>'+(tw?'<div class="card between" style="margin-bottom:8px"><span>Logged: <b>'+wName(tw.type)+'</b>'+(tw.min?', '+tw.min+' min':'')+'</span><button class="btn link sm" data-a="unlog">Undo</button></div>':'')+
@@ -494,7 +496,7 @@ function vSettings(){var s=S.settings;
  var dl=['S','M','T','W','T','F','S'];
  h+='<div class="card"><div class="lbl" style="margin-bottom:4px">My routines</div><div class="small muted" style="margin-bottom:6px">Activities that repeat on set days, like Church on Sunday or Grade papers on weekdays. They appear on days you haven\'t planned yet.</div>'+
   ((S.routines||[]).length?(S.routines||[]).map(function(r){return '<div class="item"><span class="c" style="background:'+CAT[r.cat]+'"></span><span class="x">'+esc(r.text)+'<br><span class="small muted">'+(r.time?t12(r.time)+' · ':'')+(r.days.length===7?'Every day':r.days.map(function(d){return DOW[d].slice(0,3)}).join(', '))+'</span></span><button class="btn link sm" data-a="rmR" data-id="'+r.id+'">Remove</button></div>'}).join(''):'<div class="empty">No routines yet.</div>')+
-  '<div style="border-top:1px solid var(--rule2);padding-top:10px;margin-top:4px;display:flex;flex-direction:column;gap:8px"><input class="field" id="rText" placeholder="Activity, e.g. Church" aria-label="Routine name"><div class="row" style="gap:8px"><select id="rCat" class="field" aria-label="Category">'+CATS.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('')+'</select><input id="rTime" type="time" class="field" aria-label="Time"></div><div class="row" style="gap:4px;justify-content:space-between">'+dl.map(function(x,i){var on=(ui.rDays||[]).indexOf(i)>=0;return '<button class="chip'+(on?' on':'')+'" style="width:40px;justify-content:center;padding:0" data-a="rDay" data-i="'+i+'" aria-label="'+DOW[i]+'" aria-pressed="'+on+'">'+x+'</button>'}).join('')+'</div><button class="btn dark" data-a="addR">Add routine</button></div></div>';
+  '<div style="border-top:1px solid var(--rule2);padding-top:10px;margin-top:4px;display:flex;flex-direction:column;gap:8px"><input class="field" id="rText" placeholder="Activity, e.g. Church" aria-label="Routine name"><div class="row" style="gap:8px"><select id="rCat" class="field" aria-label="Category">'+CATS.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('')+'</select><input id="rTime" type="time" class="field" aria-label="Time"></div><div class="row" style="gap:4px;justify-content:space-between">'+[1,2,3,4,5,6,0].map(function(i){var x=dl[i];var on=(ui.rDays||[]).indexOf(i)>=0;return '<button class="chip'+(on?' on':'')+'" style="width:40px;justify-content:center;padding:0" data-a="rDay" data-i="'+i+'" aria-label="'+DOW[i]+'" aria-pressed="'+on+'">'+x+'</button>'}).join('')+'</div><button class="btn dark" data-a="addR">Add routine</button></div></div>';
  h+='<div class="card"><div class="between" style="min-height:52px"><label for="bv">Bible app version number</label><input id="bv" class="field" style="width:90px" data-path="settings.bibleVersion" value="'+esc(s.bibleVersion)+'"></div><div class="small muted">MONDO has the World English Bible built in. This number is only for the optional YouVersion link. 111 is NIV, 1 is KJV.</div></div>';
  h+='<div class="card"><div class="lbl" style="margin-bottom:4px">Your data</div><div class="small muted" style="margin-bottom:10px">'+esc(cloudText())+' A backup file is still a good idea once in a while.'+(S.lastBackup?' Last backup: '+new Date(S.lastBackup).toLocaleDateString()+'.':'')+(storageOK?'':' <b style="color:var(--bodyT)">Warning: saving failed on this device.</b>')+'</div>'+
   '<div class="row" style="gap:8px"><button class="btn dark" style="flex:1" data-a="export">Back up</button><button class="btn" style="flex:1" data-a="import">Restore</button></div>'+
@@ -606,7 +608,7 @@ render(false);
   cloud.col=db.collection('data/users/'+uid);setCloud('loading');var to=setTimeout(function(){setCloud('error')},10000);
   var snap=await cloud.col.get();clearTimeout(to);var core=null,days={};
   snap.docs.forEach(function(d){var x=d.data()||{};if(d.id==='core'&&x.state){core=JSON.parse(x.state);cloud.synced.core=x.state}else if(d.id.indexOf('m-')===0&&x.days){cloud.synced[d.id]=x.days;var dd=JSON.parse(x.days);for(var k in dd)days[k]=dd[k]}});
-  if(core){S=merge(defaults(),core);S.days=days;applyFresh();migrateBible();try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}if(S.setup&&route.name==='setup')route={name:'today'}}
+  if(core){S=merge(defaults(),core);S.days=days;applyFresh();migrateBible();migrateWeeks();try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}if(S.setup&&route.name==='setup')route={name:'today'}}
   cloud.ready=true;setCloud('ok');cloudPush();render(true)
  }catch(e){setCloud('error')}})();
 </script>
