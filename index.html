@@ -143,6 +143,14 @@ function defaults(){return {v:1,setup:false,
 function merge(base,src){for(var k in src){if(src[k]&&typeof src[k]==='object'&&!Array.isArray(src[k])&&base[k]&&typeof base[k]==='object'&&!Array.isArray(base[k]))merge(base[k],src[k]);else base[k]=src[k]}return base}
 var S;
 try{S=merge(defaults(),JSON.parse(localStorage.getItem(STORE)||'{}'))}catch(e){S=defaults()}
+var FIRST_DAY='2026-11-12';
+function startDate(){return S.settings.startDate||FIRST_DAY}
+function freshStart(from){var keep={};for(var k in S.days)if(k>=from)keep[k]=S.days[k];S.days=keep;
+ for(var r in S.bible.read)if(S.bible.read[r]<from)delete S.bible.read[r];
+ S.weights=S.weights.filter(function(w){return w.date>=from});
+ var wk={};for(var w in S.weeks)if(w>=weekStart(from))wk[w]=S.weeks[w];S.weeks=wk;
+ if(!Object.keys(S.bible.read).length)S.bible.current=0;S.settings.startDate=from}
+function applyFresh(){if(S.freshV!==1){var t=keyOf(new Date());freshStart(t<=FIRST_DAY?FIRST_DAY:t);S.freshV=1;return true}return false}
 var storageOK=true;
 function save(){try{localStorage.setItem(STORE,JSON.stringify(S));storageOK=true}catch(e){storageOK=false}cloudPush()}
 /* ---------- Cloud sync (Claude account) ---------- */
@@ -155,6 +163,7 @@ function cloudPush(){if(!cloud.ready)return;clearTimeout(cloud.timer);cloud.time
 function setCloud(st){if(cloud.status===st)return;cloud.status=st;if(route.name==='settings')render(true)}
 function cloudText(){return {ok:'Saved to your Claude account. Open MONDO on any device signed in to Claude and your progress is there.',loading:'Loading your data...',local:'Saved on this device only.',error:'Could not reach your Claude account. Changes are saved on this device and will sync when it reconnects.',full:'Your Claude storage for MONDO is full. Back up, then contact support.'}[cloud.status]}
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+if(applyFresh()){try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}}
 
 var route={name:S.setup?'today':'setup'};
 var ui={calMonth:null,bibleT:1,book:null,dinnerKind:'quick',dinnerIdx:0,q:'',draft:null,eraseArm:false};
@@ -201,13 +210,13 @@ function genDay(k,exclude){var s=S.settings,d=parseKey(k),dow=d.getDay(),items=[
 function getDay(k,create){if(!S.days[k]&&create){S.days[k]=genDay(k);save()}return S.days[k]}
 function sortItems(items){return items.slice().sort(function(a,b){return (a.time||'99').localeCompare(b.time||'99')})}
 function checkable(items){return items.filter(function(i){return !i.block})}
-function dayLevel(k){var d=S.days[k];if(!d)return'';if(d.rest)return'rest';var c=checkable(d.items),n=c.filter(function(i){return i.done}).length;if(!c.length||!n)return k<todayKey()?'none':'';return n===c.length?'full':'some'}
+function dayLevel(k){var d=S.days[k];if(!d||k<startDate())return'';if(d.rest)return'rest';var c=checkable(d.items),n=c.filter(function(i){return i.done}).length;if(!c.length||!n)return k<todayKey()?'none':'';return n===c.length?'full':'some'}
 
 /* ---------- Weeks ---------- */
 function defTargets(){return{gym:3,bible:14,prayer:7,bed:5,family:2,movie:1}}
 function targetsFor(ws){var w=S.weeks[ws];return w&&w.targets?w.targets:defTargets()}
 function weekStats(ws){var st={gym:0,bible:0,prayer:0,bed:0,family:0,movie:0,done:0,total:0};
- for(var i=0;i<7;i++){var k=addDays(ws,i),d=S.days[k];if(!d)continue;
+ for(var i=0;i<7;i++){var k=addDays(ws,i),d=S.days[k];if(!d||k<startDate())continue;
   var gymDone=!!d.workout;d.items.forEach(function(it){if(it.block)return;if(k<=todayKey()){st.total++;if(it.done)st.done++}
    if(!it.done)return;if(it.kind==='gym')gymDone=true;if(it.kind==='prayer')st.prayer++;if(it.kind==='bed')st.bed++;if(it.kind==='family')st.family++;if(it.kind==='movie')st.movie++});
   if(gymDone)st.gym++}
@@ -266,7 +275,7 @@ function vSetup(){var s=S.settings;
  '<button class="btn dark block" data-a="finishSetup">Start MONDO</button></div>'}
 function workoutSelects(){return DOW.map(function(dn,i){return '<div class="between" style="min-height:48px;border-bottom:1px solid var(--rule2)"><label for="w_'+i+'">'+dn+'</label><select id="w_'+i+'" class="field" style="width:140px" data-plan7="'+i+'">'+Object.keys(allW()).map(function(w){return '<option value="'+w+'"'+(S.settings.plan7[i]===w?' selected':'')+'>'+esc(wName(w))+'</option>'}).join('')+'</select></div>'}).join('')}
 
-function vToday(){var k=todayKey(),d=getDay(k,true),ws=weekStart(k),st=weekStats(ws),tg=targetsFor(ws),now=new Date(),hm=pad(now.getHours())+':'+pad(now.getMinutes());
+function vToday(){if(todayKey()<startDate())return vBefore();var k=todayKey(),d=getDay(k,true),ws=weekStart(k),st=weekStats(ws),tg=targetsFor(ws),now=new Date(),hm=pad(now.getHours())+':'+pad(now.getMinutes());
  var h='<div class="screen">';
  h+='<div class="between"><div class="brand">'+MARK(20)+'MONDO</div><button class="iconbtn" data-a="go" data-r="settings" aria-label="Settings">'+ic('gear',20)+'</button></div>';
  h+='<div class="between" style="align-items:flex-end"><div><div class="lbl">'+DOW[now.getDay()]+'</div><h1>'+MON[now.getMonth()]+' '+now.getDate()+'</h1></div><button class="btn navy" data-a="go" data-r="plan">Plan tomorrow</button></div>';
@@ -287,14 +296,22 @@ function vToday(){var k=todayKey(),d=getDay(k,true),ws=weekStart(k),st=weekStats
  if(!d.rest)h+='<button class="btn link sm" style="align-self:flex-start" data-a="restDay" data-k="'+k+'">Not feeling well? Make today a rest day</button>';
  return h+'</div>'+tabbar()}
 
-function vPlan(){var t=addDays(todayKey(),1),k=todayKey(),today=getDay(k,true),ws=weekStart(t),st=weekStats(ws),tg=targetsFor(ws);
+function vBefore(){var sd=startDate(),now=new Date(),vr=votdRef();
+ var h='<div class="screen"><div class="between"><div class="brand">'+MARK(20)+'MONDO</div><button class="iconbtn" data-a="go" data-r="settings" aria-label="Settings">'+ic('gear',20)+'</button></div>';
+ h+='<div><div class="lbl">'+DOW[now.getDay()]+'</div><h1>'+MON[now.getMonth()]+' '+now.getDate()+'</h1></div>';
+ h+='<div class="card dark"><div class="lbl" style="color:#D9CFBD">Day one</div><div style="font-family:var(--serif);font-size:22px;font-weight:600;margin-top:2px">MONDO starts '+esc(longDate(sd))+'</div><div style="margin-top:6px;color:#E9E2D4">'+(sd===addDays(todayKey(),1)?'Tonight, plan your first day. Tomorrow, live it.':'Your plan begins on that day.')+'</div>'+(sd===addDays(todayKey(),1)?'<button class="btn" style="margin-top:12px" data-a="go" data-r="plan">Plan tomorrow</button>':'')+'</div>';
+ h+='<button class="card" data-a="read" data-b="'+vr[0]+'" data-c="'+vr[1]+'" style="text-align:left;cursor:pointer"><div class="lbl" style="color:var(--faithT)">Word for today · '+esc(refName(vr[0],vr[1],vr[2]))+'</div><div class="votd" id="votd" style="margin-top:4px">'+(BIBLE[vr[0]]?esc(verseText(BIBLE[vr[0]],vr[1],vr[2])):'&nbsp;')+'</div></button>';
+ if(!BIBLE[vr[0]])loadBook(vr[0]).then(function(b){var el=document.getElementById('votd');if(el)el.textContent=verseText(b,vr[1],vr[2])}).catch(function(){});
+ h+='<button class="card" data-a="go" data-r="week" style="text-align:left;cursor:pointer"><div class="lbl" style="color:var(--plan)">Your first week</div><div style="font-size:16px;margin-top:2px">Set your targets for the week</div></button>';
+ return h+'</div>'+tabbar()}
+function vPlan(){var t=addDays(todayKey(),1),k=todayKey(),today=k>=startDate()?getDay(k,true):{items:[],journal:{}},ws=weekStart(t),st=weekStats(ws),tg=targetsFor(ws);
  if(!ui.draft||ui.draft.date!==t){var ex={};today.items.forEach(function(i){if(i.kind==='bible'&&!i.done&&i.chapters)i.chapters.forEach(function(c){ex[bkey(c[0],c[1])]=1})});
   var base=S.days[t]?JSON.parse(JSON.stringify(S.days[t])):genDay(t,ex);base.items.forEach(function(i){i.inc=true});ui.draft={date:t,day:base}}
  var dr=ui.draft.day,c=checkable(today.items),n=c.filter(function(i){return i.done}).length;
  var left=[['Gym',tg.gym-st.gym],['Bible chapters',tg.bible-st.bible],['Family',tg.family-st.family],['Movie night',tg.movie-st.movie],['Bed by 10',tg.bed-st.bed]].filter(function(x){return x[1]>0});
  var h='<div class="screen noTabs">'+back('today','Cancel');
  h+='<div><h1>Plan tomorrow</h1><div class="muted">'+longDate(t)+'</div></div>';
- h+='<div class="card between"><div><div class="lbl">Today, closed</div><div style="margin-top:2px">'+n+' of '+c.length+' done</div></div><button class="btn sm" data-a="go" data-r="journal">'+(today.journal&&today.journal.grateful?'Journal saved':'Write journal')+'</button></div>';
+ if(k>=startDate())h+='<div class="card between"><div><div class="lbl">Today, closed</div><div style="margin-top:2px">'+n+' of '+c.length+' done</div></div><button class="btn sm" data-a="go" data-r="journal">'+(today.journal&&today.journal.grateful?'Journal saved':'Write journal')+'</button></div>';
  h+='<div><div class="lbl" style="margin-bottom:6px">Left this week'+(addDays(ws,0)!==weekStart(k)?' (new week)':'')+'</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+(left.length?left.map(function(x){return '<span class="chip" style="cursor:default">'+x[0]+': '+x[1]+'</span>'}).join(''):'<span class="muted small">All targets met. Well done.</span>')+'</div></div>';
  var groups=[['faith','Faith','var(--faithT)'],['body','Body','var(--bodyT)'],['work','Work and must-dos','var(--plan)'],['home','Home','var(--home)'],['plan','Evening','var(--plan)'],['rest','Rest','var(--rest)']];
  h+='<div class="list" style="padding-top:4px">';
@@ -426,6 +443,7 @@ function vDinner(){var list=DINNERS.filter(function(x){return x.k===ui.dinnerKin
 function vSettings(){var s=S.settings;
  var h='<div class="screen noTabs">'+back('today','Done')+'<h1>Settings</h1>';
  h+='<div class="card"><div class="lbl" style="margin-bottom:4px">Daily times</div>'+[['wake','Wake up'],['bible','Bible time'],['workStart','Work starts'],['workEnd','Work ends'],['gym','Gym / walk (weekdays)'],['dinner','Dinner'],['plan','Journal + plan'],['bed','In bed by']].map(function(f){return '<div class="between" style="min-height:52px;border-bottom:1px solid var(--rule2)"><label for="s_'+f[0]+'">'+f[1]+'</label><input id="s_'+f[0]+'" type="time" class="field" style="width:150px" data-path="settings.'+f[0]+'" value="'+s[f[0]]+'"></div>'}).join('')+'<div class="small muted" style="margin-top:8px">New times apply to days you haven\'t planned yet.</div></div>';
+ h+='<div class="card"><div class="between" style="min-height:52px"><label for="sd">Start date</label><input id="sd" type="date" class="field" style="width:170px" value="'+startDate()+'"></div><div class="small muted">Days before this date are not counted. To start over, pick a date and tap Start fresh.</div><button class="btn sm" style="margin-top:8px" data-a="fresh">'+(ui.freshArm?'Tap again to clear everything before this date':'Start fresh from this date')+'</button></div>';
  h+='<div class="card"><div class="lbl" style="margin-bottom:4px">Weekly workouts</div>'+workoutSelects()+'</div>';
  var aw=allW();
  h+='<div class="card"><div class="lbl" style="margin-bottom:4px">Workout types</div><div class="small muted" style="margin-bottom:6px">Add your own (Basketball, Swim, Bike) or hide ones you don\'t use.</div>'+
@@ -498,6 +516,7 @@ var A={
   var tk=todayKey();for(var i=0;i<14;i++){var k=addDays(tk,i),d=S.days[k],r=S.routines[S.routines.length-1];if(d&&!d.planned&&k>tk&&r.days.indexOf(parseKey(k).getDay())>=0)d.items.push(mk('routine',r.cat,r.text,r.time,{rid:r.id}))}
   save();render(true);toast(t+' added')},
  rmR:function(el){S.routines=(S.routines||[]).filter(function(r){return r.id!==el.dataset.id});save();render(true)},
+ fresh:function(){var v=document.getElementById('sd').value;if(!v)return;if(!ui.freshArm){ui.freshArm=true;render(true);document.getElementById('sd').value=v;return}ui.freshArm=false;freshStart(v);save();go('today');toast('Fresh start: '+longDate(v))},
  erase:function(){if(!ui.eraseArm){ui.eraseArm=true;render(true);return}S=defaults();save();ui.eraseArm=false;go('setup')}
 };
 
@@ -531,8 +550,8 @@ render(false);
   cloud.col=db.collection('data/users/'+uid);setCloud('loading');var to=setTimeout(function(){setCloud('error')},10000);
   var snap=await cloud.col.get();clearTimeout(to);var core=null,days={};
   snap.docs.forEach(function(d){var x=d.data()||{};if(d.id==='core'&&x.state){core=JSON.parse(x.state);cloud.synced.core=x.state}else if(d.id.indexOf('m-')===0&&x.days){cloud.synced[d.id]=x.days;var dd=JSON.parse(x.days);for(var k in dd)days[k]=dd[k]}});
-  if(core){S=merge(defaults(),core);S.days=days;try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}if(S.setup&&route.name==='setup')route={name:'today'}}
-  cloud.ready=true;setCloud('ok');if(!core&&S.setup)cloudPush();render(true)
+  if(core){S=merge(defaults(),core);S.days=days;applyFresh();try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}if(S.setup&&route.name==='setup')route={name:'today'}}
+  cloud.ready=true;setCloud('ok');cloudPush();render(true)
  }catch(e){setCloud('error')}})();
 </script>
 </body>
