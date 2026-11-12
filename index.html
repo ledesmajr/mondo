@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F2EA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MONDO">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<title>MONDO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F2EA; --card:#FFFDF8; --ink:#22201C; --muted:#5F594F; --rule:#DDD5C7; --rule2:#EAE3D6; --line:#C9C0B0;
+  --faith:#A8761A; --faithT:#8A6214; --body:#B4532A; --bodyT:#A3481F; --plan:#2F4A6D; --home:#3F6B4A; --rest:#6A4C7A; --work:#9C968B;
+  --serif:'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --sans:'Source Sans 3', -apple-system, 'Helvetica Neue', Arial, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+a{color:var(--plan)}
+.screen{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 104px);display:flex;flex-direction:column;gap:14px}
+.screen.noTabs{padding-bottom:calc(env(safe-area-inset-bottom) + 28px)}
+h1{margin:0;font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.15}
+h2{margin:0;font-family:var(--serif);font-weight:600;font-size:19px}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:12px 14px}
+.card.dark{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.row{display:flex;align-items:center;gap:12px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 14px;border:1px solid var(--line);background:var(--card);border-radius:8px;font-weight:600;font-size:15px;text-decoration:none;color:var(--ink);cursor:pointer}
+.btn.dark{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.btn.navy{background:var(--plan);color:var(--card);border-color:var(--plan)}
+.btn.block{width:100%}
+.btn.sm{min-height:36px;font-size:13px;padding:0 10px}
+.btn.link{border:0;background:none;color:var(--plan);padding:0 4px}
+.iconbtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border:1px solid var(--line);background:var(--card);border-radius:17px;font-size:13px;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.dot{width:10px;height:10px;border-radius:5px;display:inline-block;flex:none}
+.bar{height:6px;background:var(--rule2);border-radius:3px;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:3px}
+.list{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:0 14px}
+.item{display:flex;align-items:center;gap:12px;min-height:50px;border-bottom:1px solid var(--rule2)}
+.item:last-child{border-bottom:0}
+.item .t{width:46px;font-size:12px;color:var(--muted);flex:none}
+.item .c{width:4px;height:24px;border-radius:2px;flex:none}
+.item .x{flex:1;font-size:16px;line-height:1.3}
+.item.done .x{text-decoration:line-through;color:var(--muted)}
+input[type=checkbox]{width:24px;height:24px;accent-color:var(--ink);margin:0;flex:none}
+.txt{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:8px 0;font-size:16px;border-radius:0}
+.txt.serif{font-family:var(--serif)}
+.field{width:100%;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:10px 12px;font-size:16px}
+textarea.txt{resize:vertical;min-height:90px;line-height:1.5}
+.seg{display:flex;background:var(--rule2);border-radius:8px;padding:3px}
+.seg button{flex:1;min-height:38px;border:0;background:transparent;border-radius:6px;color:var(--muted);font-size:14px;cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:600}
+.grid7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal{height:44px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid transparent;background:none;cursor:pointer;color:var(--ink)}
+.chg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.chg button{height:40px;border-radius:5px;border:1px solid var(--line);background:var(--card);font-size:14px;cursor:pointer}
+.chg button.r{background:var(--faithT);border-color:var(--faithT);color:var(--card);font-weight:600}
+.chg button.n{border:2px solid var(--ink);font-weight:600}
+.step{display:flex;align-items:center;gap:10px;min-height:54px;border-bottom:1px solid var(--rule2)}
+.step:last-child{border-bottom:0}
+.step .num{width:34px;text-align:center;font-weight:600;font-size:17px}
+.step button{width:42px;height:42px;border:1px solid var(--line);background:var(--card);border-radius:8px;font-size:20px;cursor:pointer}
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--rule);display:flex;justify-content:space-around;padding:6px 6px calc(env(safe-area-inset-bottom) + 6px);z-index:5}
+.tabbar button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);background:none;border:0;min-width:60px;min-height:50px;justify-content:center;cursor:pointer}
+.tabbar button.on{color:var(--ink);font-weight:600}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--serif);font-weight:600;font-size:13px;letter-spacing:.32em}
+.empty{padding:16px 0;color:var(--muted);font-size:14px}
+.ent{display:flex;gap:12px;align-items:baseline;min-height:44px;border-bottom:1px solid var(--rule2);font-size:15px;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;cursor:pointer;padding:0}
+
+.reader{font-family:var(--serif);font-size:var(--rs,19px);line-height:1.65}
+.reader p{margin:0 0 14px;white-space:pre-line}
+.reader sup{font-family:var(--sans);font-size:11px;font-weight:600;color:var(--faithT);margin-right:3px;vertical-align:4px}
+.votd{font-family:var(--serif);font-size:17px;line-height:1.5}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 92px);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:8px;font-size:14px;z-index:9}
+svg text{font-family:var(--sans)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<input type="file" id="importFile" accept="application/json,.json" style="display:none">
+<script>
+'use strict';
+/* ---------- Data ---------- */
+var BOOKS = [
+['Genesis',50,'GEN'],['Exodus',40,'EXO'],['Leviticus',27,'LEV'],['Numbers',36,'NUM'],['Deuteronomy',34,'DEU'],['Joshua',24,'JOS'],['Judges',21,'JDG'],['Ruth',4,'RUT'],['1 Samuel',31,'1SA'],['2 Samuel',24,'2SA'],['1 Kings',22,'1KI'],['2 Kings',25,'2KI'],['1 Chronicles',29,'1CH'],['2 Chronicles',36,'2CH'],['Ezra',10,'EZR'],['Nehemiah',13,'NEH'],['Esther',10,'EST'],['Job',42,'JOB'],['Psalms',150,'PSA'],['Proverbs',31,'PRO'],['Ecclesiastes',12,'ECC'],['Song of Songs',8,'SNG'],['Isaiah',66,'ISA'],['Jeremiah',52,'JER'],['Lamentations',5,'LAM'],['Ezekiel',48,'EZK'],['Daniel',12,'DAN'],['Hosea',14,'HOS'],['Joel',3,'JOL'],['Amos',9,'AMO'],['Obadiah',1,'OBA'],['Jonah',4,'JON'],['Micah',7,'MIC'],['Nahum',3,'NAM'],['Habakkuk',3,'HAB'],['Zephaniah',3,'ZEP'],['Haggai',2,'HAG'],['Zechariah',14,'ZEC'],['Malachi',4,'MAL'],
+['Matthew',28,'MAT'],['Mark',16,'MRK'],['Luke',24,'LUK'],['John',21,'JHN'],['Acts',28,'ACT'],['Romans',16,'ROM'],['1 Corinthians',16,'1CO'],['2 Corinthians',13,'2CO'],['Galatians',6,'GAL'],['Ephesians',6,'EPH'],['Philippians',4,'PHP'],['Colossians',4,'COL'],['1 Thessalonians',5,'1TH'],['2 Thessalonians',3,'2TH'],['1 Timothy',6,'1TI'],['2 Timothy',4,'2TI'],['Titus',3,'TIT'],['Philemon',1,'PHM'],['Hebrews',13,'HEB'],['James',5,'JAS'],['1 Peter',5,'1PE'],['2 Peter',3,'2PE'],['1 John',5,'1JN'],['2 John',1,'2JN'],['3 John',1,'3JN'],['Jude',1,'JUD'],['Revelation',22,'REV']
+];
+var OT_COUNT = 39, TOTAL_CH = 1189;
+var DINNERS = [
+{n:'Tinola',d:'Chicken, sayote, ginger, malunggay',t:40,k:'weekend'},
+{n:'Sinigang na isda',d:'Fish, tamarind broth, kangkong, radish',t:35,k:'weekend'},
+{n:'Ginisang monggo',d:'Mung beans, spinach or malunggay, a little pork or fish',t:45,k:'weekend'},
+{n:'Pinakbet',d:'Squash, okra, eggplant, string beans',t:40,k:'weekend'},
+{n:'Nilagang baka',d:'Beef, potato, cabbage, corn in clear broth',t:90,k:'weekend'},
+{n:'Arroz caldo',d:'Rice porridge with chicken and ginger',t:50,k:'weekend'},
+{n:'Steamed fish with ginger',d:'Tilapia or bangus, ginger, scallions',t:25,k:'quick'},
+{n:'Chicken and vegetable stir-fry',d:'Chicken breast, broccoli, carrots, bell pepper',t:20,k:'quick'},
+{n:'Chopsuey',d:'Mixed vegetables with chicken or shrimp',t:25,k:'quick'},
+{n:'Ginisang ampalaya with egg',d:'Bitter gourd, tomato, egg',t:20,k:'quick'},
+{n:'Laswa',d:'Light vegetable soup with squash and okra',t:25,k:'quick'},
+{n:'Grilled chicken, rice and salad',d:'Lean chicken, cucumber tomato salad',t:30,k:'quick'}
+];
+var BASE_WORKOUTS = {rest:'Rest',walk:'Walk',strength:'Strength',core:'Core',cardio:'Cardio',gym:'Gym'};
+function allW(){var o={};for(var k in BASE_WORKOUTS)if((S.hiddenW||[]).indexOf(k)<0||k==='rest')o[k]=BASE_WORKOUTS[k];(S.customW||[]).forEach(function(c){o[c.id]=c.name});return o}
+function wName(k){return allW()[k]||BASE_WORKOUTS[k]||((S.customW||[]).filter(function(c){return c.id===k})[0]||{}).name||'Workout'}
+var CATS=[['faith','Faith'],['body','Body'],['work','Work'],['home','Home'],['rest','Rest']];
+var CAT = {faith:'var(--faith)',body:'var(--body)',work:'var(--work)',plan:'var(--plan)',home:'var(--home)',rest:'var(--rest)'};
+var DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+/* ---------- Dates ---------- */
+function pad(n){return (n<10?'0':'')+n}
+function keyOf(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function parseKey(k){var p=k.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+function addDays(k,n){var d=parseKey(k);d.setDate(d.getDate()+n);return keyOf(d)}
+function todayKey(){return keyOf(new Date())}
+function weekStart(k){var d=parseKey(k);d.setDate(d.getDate()-d.getDay());return keyOf(d)}
+function shortDate(k){var d=parseKey(k);return MON[d.getMonth()].slice(0,3)+' '+d.getDate()}
+function longDate(k){var d=parseKey(k);return DOW[d.getDay()]+', '+MON[d.getMonth()]+' '+d.getDate()}
+function t12(hm,short){if(!hm)return'';var p=hm.split(':'),h=+p[0],m=p[1];var ap=h>=12?'PM':'AM';h=h%12||12;return short?(h+':'+m):(h+':'+m+' '+ap)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function uid(){return Math.random().toString(36).slice(2,9)}
+
+/* ---------- State ---------- */
+var STORE='mondo.v1';
+function defaults(){return {v:1,setup:false,
+ settings:{wake:'06:45',bible:'07:00',workStart:'08:00',workEnd:'17:00',gym:'17:30',dinner:'18:30',plan:'21:00',bed:'22:00',bibleVersion:'111',plan7:['rest','walk','strength','walk','strength','walk','gym']},
+ days:{},weeks:{},bible:{read:{},current:0},weights:[],doctor:{booked:false,done:false},favorites:[],lastBackup:null,customW:[],hiddenW:[],routines:[]}}
+function merge(base,src){for(var k in src){if(src[k]&&typeof src[k]==='object'&&!Array.isArray(src[k])&&base[k]&&typeof base[k]==='object'&&!Array.isArray(base[k]))merge(base[k],src[k]);else base[k]=src[k]}return base}
+var S;
+try{S=merge(defaults(),JSON.parse(localStorage.getItem(STORE)||'{}'))}catch(e){S=defaults()}
+var storageOK=true;
+function save(){try{localStorage.setItem(STORE,JSON.stringify(S));storageOK=true}catch(e){storageOK=false}cloudPush()}
+/* ---------- Cloud sync (Claude account) ---------- */
+var cloud={col:null,ready:false,status:'local',synced:{},queue:Promise.resolve(),timer:null,dl:null};
+function splitState(){var core={},months={};for(var k in S)if(k!=='days')core[k]=S[k];for(var d in S.days){var m='m-'+d.slice(0,7);(months[m]=months[m]||{})[d]=S.days[d]}return{core:core,months:months}}
+function cloudPush(){if(!cloud.ready)return;clearTimeout(cloud.timer);cloud.timer=setTimeout(function(){var sp=splitState(),jobs=[],cs=JSON.stringify(sp.core);
+ if(cloud.synced.core!==cs)jobs.push(['core',{state:cs},cs]);
+ for(var m in sp.months){var ms=JSON.stringify(sp.months[m]);if(cloud.synced[m]!==ms)jobs.push([m,{days:ms},ms])}
+ jobs.forEach(function(j){cloud.queue=cloud.queue.then(function(){return cloud.col.doc(j[0]).set(j[1])}).then(function(){cloud.synced[j[0]]=j[2];setCloud('ok')}).catch(function(e){setCloud(e&&e.code==='quota_exceeded'?'full':'error')})})},800)}
+function setCloud(st){if(cloud.status===st)return;cloud.status=st;if(route.name==='settings')render(true)}
+function cloudText(){return {ok:'Saved to your Claude account. Open MONDO on any device signed in to Claude and your progress is there.',loading:'Loading your data...',local:'Saved on this device only.',error:'Could not reach your Claude account. Changes are saved on this device and will sync when it reconnects.',full:'Your Claude storage for MONDO is full. Back up, then contact support.'}[cloud.status]}
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+
+var route={name:S.setup?'today':'setup'};
+var ui={calMonth:null,bibleT:1,book:null,dinnerKind:'quick',dinnerIdx:0,q:'',draft:null,eraseArm:false};
+
+/* ---------- Bible ---------- */
+function bkey(code,ch){return code+'.'+ch}
+function isRead(code,ch){return !!S.bible.read[bkey(code,ch)]}
+function bookIndex(code){for(var i=0;i<BOOKS.length;i++)if(BOOKS[i][2]===code)return i;return -1}
+function bookRead(i){var b=BOOKS[i],n=0;for(var c=1;c<=b[1];c++)if(isRead(b[2],c))n++;return n}
+function readCount(from,to){var n=0;for(var i=from;i<to;i++)n+=bookRead(i);return n}
+function nextChapters(n,exclude){exclude=exclude||{};var out=[],i=S.bible.current||0,guard=0;
+ while(out.length<n&&guard<BOOKS.length+1){var b=BOOKS[i];for(var c=1;c<=b[1]&&out.length<n;c++){var k=bkey(b[2],c);if(!S.bible.read[k]&&!exclude[k])out.push([b[2],c])}
+  if(out.length<n){i=(i+1)%BOOKS.length;guard++}}
+ return out}
+function chText(chs){if(!chs||!chs.length)return'Bible reading';var parts=[],i=0;
+ while(i<chs.length){var code=chs[i][0],start=chs[i][1],end=start;var j=i+1;while(j<chs.length&&chs[j][0]===code&&chs[j][1]===end+1){end++;j++}
+  var name=BOOKS[bookIndex(code)][0];parts.push(name+' '+(start===end?start:start+' to '+end));i=j}
+ return parts.join(', ')}
+function bibleLink(chs){if(!chs||!chs.length)return'#';return'https://www.bible.com/bible/'+encodeURIComponent(S.settings.bibleVersion||'111')+'/'+chs[0][0]+'.'+chs[0][1]}
+function setRead(code,ch,on,dateKey){var k=bkey(code,ch);if(on){S.bible.read[k]=dateKey||todayKey();var i=bookIndex(code);if(bookRead(i)<BOOKS[i][1])S.bible.current=i;else S.bible.current=(i+1)%BOOKS.length}else delete S.bible.read[k]}
+var BIBLE={};
+function loadBook(code){if(BIBLE[code])return Promise.resolve(BIBLE[code]);return fetch('bible/'+code+'.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){BIBLE[code]=d;return d})}
+function verseText(book,ch,v){var out='',on=false;(book[ch-1]||[]).forEach(function(p){p.forEach(function(seg){if(seg[0])on=seg[0]===v;if(on)out+=seg[1]})});return out.replace(/\s+/g,' ').trim()}
+var VOTD=[['PSA',23,1],['ISA',41,10],['PHP',4,13],['JOS',1,9],['PRO',3,5],['MAT',11,28],['ROM',8,28],['JER',29,11],['PSA',46,1],['2CO',12,9],['ISA',40,31],['LAM',3,23],['PHP',4,6],['MAT',6,33],['GAL',6,9],['PSA',119,105],['COL',3,23],['HEB',12,1],['1CO',16,14],['PSA',37,5],['JHN',14,27],['PRO',16,3],['ROM',12,2],['MIC',6,8],['PSA',90,12],['EPH',4,32],['JAS',1,5],['1PE',5,7],['PSA',139,14],['2TI',1,7],['ROM',15,13],['PRO',4,23],['ISA',26,3],['PSA',121,2],['MAT',5,16],['JHN',15,5],['PSA',27,1],['ECC',3,1],['1TH',5,16],['HEB',11,1],['PSA',143,8],['DEU',31,6],['PRO',27,17],['ROM',5,8],['EPH',2,10],['PSA',16,11],['ZEP',3,17],['NEH',8,10],['JHN',16,33],['PSA',55,22]];
+function votdRef(){var d=new Date(),start=new Date(d.getFullYear(),0,0),n=Math.floor((d-start)/864e5);return VOTD[n%VOTD.length]}
+function refName(code,ch,v){return BOOKS[bookIndex(code)][0]+' '+ch+(v?':'+v:'')}
+function chaptersPerDay(){var t=targetsFor(weekStart(todayKey())).bible;return Math.max(1,Math.ceil(t/7))}
+
+/* ---------- Days ---------- */
+function mk(kind,cat,text,time,extra){var o={id:uid(),kind:kind,cat:cat,text:text,time:time,done:false};for(var k in extra||{})o[k]=extra[k];return o}
+function dinnerPick(seed){var list=DINNERS.concat(S.favorites.map(function(f){return{n:f,d:'',t:0,k:'fav'}}));return list[Math.abs(seed)%list.length].n}
+function genDay(k,exclude){var s=S.settings,d=parseKey(k),dow=d.getDay(),items=[];
+ var chs=nextChapters(chaptersPerDay(),exclude);
+ items.push(mk('bible','faith','Bible: '+chText(chs),s.bible,{chapters:chs}));
+ items.push(mk('prayer','faith','Prayer',s.bible));
+ if(dow>=1&&dow<=5)items.push(mk('work','work','Work until '+t12(s.workEnd),s.workStart,{block:true}));
+ var w=s.plan7[dow]||'rest';
+ if(w!=='rest')items.push(mk('gym','body',wName(w)+(w==='walk'?', 25 min':''),dow===0||dow===6?'09:00':s.gym,{workoutType:w}));
+ (S.routines||[]).forEach(function(r){if(r.days.indexOf(dow)>=0)items.push(mk(r.cat==='home'&&/family/i.test(r.text)?'family':'routine',r.cat,r.text,r.time||'',{rid:r.id}))});
+ items.push(mk('dinner','home','Dinner: '+dinnerPick(d.getDate()+d.getMonth()*31),s.dinner));
+ items.push(mk('journal','plan','Journal + plan tomorrow',s.plan));
+ items.push(mk('bed','rest','In bed by '+t12(s.bed),s.bed));
+ return {items:items,intention:'',journal:{},planned:false}}
+function getDay(k,create){if(!S.days[k]&&create){S.days[k]=genDay(k);save()}return S.days[k]}
+function sortItems(items){return items.slice().sort(function(a,b){return (a.time||'99').localeCompare(b.time||'99')})}
+function checkable(items){return items.filter(function(i){return !i.block})}
+function dayLevel(k){var d=S.days[k];if(!d)return'';if(d.rest)return'rest';var c=checkable(d.items),n=c.filter(function(i){return i.done}).length;if(!c.length||!n)return k<todayKey()?'none':'';return n===c.length?'full':'some'}
+
+/* ---------- Weeks ---------- */
+function defTargets(){return{gym:3,bible:14,prayer:7,bed:5,family:2,movie:1}}
+function targetsFor(ws){var w=S.weeks[ws];return w&&w.targets?w.targets:defTargets()}
+function weekStats(ws){var st={gym:0,bible:0,prayer:0,bed:0,family:0,movie:0,done:0,total:0};
+ for(var i=0;i<7;i++){var k=addDays(ws,i),d=S.days[k];if(!d)continue;
+  var gymDone=!!d.workout;d.items.forEach(function(it){if(it.block)return;if(k<=todayKey()){st.total++;if(it.done)st.done++}
+   if(!it.done)return;if(it.kind==='gym')gymDone=true;if(it.kind==='prayer')st.prayer++;if(it.kind==='bed')st.bed++;if(it.kind==='family')st.family++;if(it.kind==='movie')st.movie++});
+  if(gymDone)st.gym++}
+ var end=addDays(ws,7);for(var key in S.bible.read){var dk=S.bible.read[key];if(dk>=ws&&dk<end)st.bible++}
+ st.pct=st.total?Math.round(st.done/st.total*100):null;return st}
+
+/* ---------- SVG ---------- */
+var MARK=function(s,inv){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.46 15 A10 10 0 0 0 21.54 15 Z" fill="'+(inv?'#7FA585':'#3F6B4A')+'"/><circle cx="12" cy="12" r="10" stroke="'+(inv?'#F6F2EA':'#22201C')+'" stroke-width="1.4"/><path d="M12 2 C8.2 5 7 8.4 7 12 C7 13 7.1 14 7.3 15" stroke="'+(inv?'#F6F2EA':'#22201C')+'" stroke-width="1.4" stroke-linecap="round"/></svg>'};
+var IC={
+ today:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+ bible:'<path d="M5 4h13v16H7a2 2 0 0 1-2-2z"/><path d="M5 18a2 2 0 0 1 2-2h11M11.5 7v6M9 9.5h5"/>',
+ fit:'<path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/>',
+ jour:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+ left:'<path d="M15 5l-7 7 7 7"/>',right:'<path d="M9 5l7 7-7 7"/>',chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+ ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>'};
+function ic(n,s){return '<svg width="'+(s||22)+'" height="'+(s||22)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>'}
+function barChart(vals,labels,color,opts){opts=opts||{};var W=340,H=150,top=18,bot=24,n=vals.length,gw=W/n,max=opts.max||Math.max(1,Math.max.apply(null,vals.map(function(v){return v||0})));
+ var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+esc(opts.label||'chart')+'">';
+ s+='<line x1="0" y1="'+(H-bot)+'" x2="'+W+'" y2="'+(H-bot)+'" stroke="#C9C0B0"/>';
+ if(opts.goal){var gy=H-bot-(opts.goal/max)*(H-bot-top);s+='<line x1="0" y1="'+gy+'" x2="'+W+'" y2="'+gy+'" stroke="#5F594F" stroke-dasharray="3 4"/><text x="'+W+'" y="'+(gy-4)+'" text-anchor="end" font-size="10" fill="#5F594F">goal '+opts.goal+'</text>'}
+ for(var i=0;i<n;i++){var v=vals[i],h=v==null?0:(Math.min(v,max)/max)*(H-bot-top),x=i*gw+gw*0.2,w=gw*0.6,y=H-bot-h;
+  if(v!=null&&v>0)s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="2" fill="'+color+'"/>';
+  s+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle" font-size="11" fill="#22201C">'+(v==null?'':v+(opts.suffix||''))+'</text>';
+  s+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="#5F594F">'+esc(labels[i])+'</text>'}
+ return s+'</svg>'}
+function lineChart(pts){var W=340,H=150,l=34,r=10,t=16,b=24;if(pts.length<2)return '<div class="empty">Add at least two weigh-ins to see your trend.</div>';
+ var ys=pts.map(function(p){return p.lb}),mn=Math.min.apply(null,ys),mx=Math.max.apply(null,ys);if(mx-mn<4){mn-=2;mx+=2}
+ var X=function(i){return l+i*(W-l-r)/(pts.length-1)},Y=function(v){return t+(mx-v)/(mx-mn)*(H-t-b)};
+ var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Weight trend">';
+ [mx,(mx+mn)/2,mn].forEach(function(v){s+='<line x1="'+l+'" y1="'+Y(v)+'" x2="'+(W-r)+'" y2="'+Y(v)+'" stroke="#EAE3D6"/><text x="'+(l-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="10" fill="#5F594F">'+Math.round(v)+'</text>'});
+ s+='<polyline fill="none" stroke="#B4532A" stroke-width="2" points="'+pts.map(function(p,i){return X(i).toFixed(1)+','+Y(p.lb).toFixed(1)}).join(' ')+'"/>';
+ pts.forEach(function(p,i){s+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(p.lb).toFixed(1)+'" r="3" fill="#B4532A"/>'});
+ s+='<text x="'+l+'" y="'+(H-6)+'" font-size="10" fill="#5F594F">'+shortDate(pts[0].date)+'</text><text x="'+(W-r)+'" y="'+(H-6)+'" text-anchor="end" font-size="10" fill="#5F594F">'+shortDate(pts[pts.length-1].date)+'</text>';
+ return s+'</svg>'}
+
+/* ---------- Views ---------- */
+function tabbar(){var t=[['today','Today','today'],['calendar','Calendar','cal'],['bible','Bible','bible'],['fitness','Fitness','fit'],['journal','Journal','jour']];
+ var cur={day:'calendar',progress:'calendar',read:'bible'}[route.name]||route.name;
+ return '<nav class="tabbar">'+t.map(function(x){return '<button data-a="go" data-r="'+x[0]+'" class="'+(cur===x[0]?'on':'')+'" aria-label="'+x[1]+'">'+ic(x[2])+x[1]+'</button>'}).join('')+'</nav>'}
+function back(r,label){return '<div class="between" style="min-height:44px"><button class="btn link" data-a="go" data-r="'+r+'">'+ic('left',18)+(label||'Back')+'</button></div>'}
+
+function itemRow(it,k){var color=CAT[it.cat]||'var(--work)';
+ if(ui.edit===k)return '<div class="item"><span class="t">'+(it.time?t12(it.time,true):'')+'</span><span class="c" style="background:'+color+'"></span><span class="x">'+esc(it.text)+'</span><button class="btn sm" data-a="rmItem" data-k="'+k+'" data-id="'+it.id+'" aria-label="Remove '+esc(it.text)+'">Remove</button></div>';
+ var txt=esc(it.text);if(it.kind==='bible'&&it.chapters&&it.chapters.length)txt+=' <button class="btn link sm" style="min-height:28px;padding:0 2px;vertical-align:0" data-a="read" data-b="'+it.chapters[0][0]+'" data-c="'+it.chapters[0][1]+'">Read</button>';
+ if(it.block)return '<div class="item"><span class="t">'+t12(it.time,true)+'</span><span class="c" style="background:'+color+'"></span><span class="x muted">'+txt+'</span></div>';
+ return '<label class="item'+(it.done?' done':'')+'"><span class="t">'+(it.time?t12(it.time,true):'')+'</span><span class="c" style="background:'+color+'"></span><span class="x">'+txt+'</span><input type="checkbox" data-toggle="'+k+'|'+it.id+'"'+(it.done?' checked':'')+' aria-label="Done: '+esc(it.text)+'"></label>'}
+
+function vSetup(){var s=S.settings;
+ return '<div class="screen noTabs"><div class="brand" style="margin-top:20px">'+MARK(26)+'MONDO</div>'+
+ '<h1 style="margin-top:8px">Set up your days</h1><div class="muted">One minute. You can change all of this later in Settings.</div>'+
+ '<div class="card">'+[['wake','Wake up'],['bible','Bible time'],['workStart','Work starts'],['workEnd','Work ends'],['gym','Gym / walk (weekdays)'],['dinner','Dinner'],['plan','Journal + plan tomorrow'],['bed','In bed by']].map(function(f){return '<div class="between" style="min-height:52px;border-bottom:1px solid var(--rule2)"><label for="s_'+f[0]+'">'+f[1]+'</label><input id="s_'+f[0]+'" type="time" class="field" style="width:150px" data-path="settings.'+f[0]+'" value="'+s[f[0]]+'"></div>'}).join('')+'</div>'+
+ '<div class="card"><div class="lbl" style="margin-bottom:6px">Weekly workouts</div>'+workoutSelects()+'</div>'+
+ '<div class="muted small">Your data stays on this phone. Use Settings → Back up to save a copy.</div>'+
+ '<button class="btn dark block" data-a="finishSetup">Start MONDO</button></div>'}
+function workoutSelects(){return DOW.map(function(dn,i){return '<div class="between" style="min-height:48px;border-bottom:1px solid var(--rule2)"><label for="w_'+i+'">'+dn+'</label><select id="w_'+i+'" class="field" style="width:140px" data-plan7="'+i+'">'+Object.keys(allW()).map(function(w){return '<option value="'+w+'"'+(S.settings.plan7[i]===w?' selected':'')+'>'+esc(wName(w))+'</option>'}).join('')+'</select></div>'}).join('')}
+
+function vToday(){var k=todayKey(),d=getDay(k,true),ws=weekStart(k),st=weekStats(ws),tg=targetsFor(ws),now=new Date(),hm=pad(now.getHours())+':'+pad(now.getMinutes());
+ var h='<div class="screen">';
+ h+='<div class="between"><div class="brand">'+MARK(20)+'MONDO</div><button class="iconbtn" data-a="go" data-r="settings" aria-label="Settings">'+ic('gear',20)+'</button></div>';
+ h+='<div class="between" style="align-items:flex-end"><div><div class="lbl">'+DOW[now.getDay()]+'</div><h1>'+MON[now.getMonth()]+' '+now.getDate()+'</h1></div><button class="btn navy" data-a="go" data-r="plan">Plan tomorrow</button></div>';
+ var vr=votdRef();h+='<button class="card" data-a="read" data-b="'+vr[0]+'" data-c="'+vr[1]+'" style="text-align:left;cursor:pointer"><div class="lbl" style="color:var(--faithT)">Word for today · '+esc(refName(vr[0],vr[1],vr[2]))+'</div><div class="votd" id="votd" style="margin-top:4px">'+(BIBLE[vr[0]]?esc(verseText(BIBLE[vr[0]],vr[1],vr[2])):'&nbsp;')+'</div></button>';
+ if(!BIBLE[vr[0]])loadBook(vr[0]).then(function(b){var el=document.getElementById('votd');if(el)el.textContent=verseText(b,vr[1],vr[2])}).catch(function(){var el=document.getElementById('votd');if(el)el.textContent='Open MONDO with internet once to load the Bible.'});
+ if(!S.weeks[ws]||!S.weeks[ws].targets)h+='<button class="card" data-a="go" data-r="week" style="text-align:left;cursor:pointer;border-color:var(--plan)"><div class="lbl" style="color:var(--plan)">This week</div><div style="font-size:16px;margin-top:2px">Set your targets for the week</div></button>';
+ h+='<div class="card"><label class="small muted" for="intent">Today I want to be</label><input id="intent" class="txt serif" style="font-style:italic;font-size:18px" placeholder="patient, focused, present" data-path="days.'+k+'.intention" value="'+esc(d.intention)+'"></div>';
+ var chips=[['Gym',st.gym,tg.gym,'var(--body)'],['Bible',st.bible,tg.bible,'var(--faith)'],['Family',st.family,tg.family,'var(--home)'],['Bed by '+t12(S.settings.bed,true).split(':')[0],st.bed,tg.bed,'var(--rest)']];
+ h+='<div><div class="between"><div class="lbl">This week</div><button class="btn link sm" data-a="go" data-r="progress">'+ic('chart',16)+'Progress</button></div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:6px">'+chips.map(function(c){var p=c[2]?Math.min(100,Math.round(c[1]/c[2]*100)):0;return '<div class="card" style="padding:8px"><div class="small muted">'+c[0]+'</div><div style="font-weight:600">'+c[1]+' of '+c[2]+'</div><div class="bar" style="margin-top:6px"><i style="width:'+p+'%;background:'+c[3]+'"></i></div></div>'}).join('')+'</div></div>';
+ if(d.rest)h+='<div class="card"><b>Rest day.</b> <span class="muted">It won\'t count as a miss.</span> <button class="btn link sm" data-a="restDay" data-k="'+k+'">Undo</button></div>';
+ h+='<div><div class="between"><div class="lbl">Today</div><button class="btn link sm" data-a="editDay" data-k="'+k+'">'+(ui.edit===k?'Done editing':'Edit')+'</button></div><div class="list" style="margin-top:4px">'+sortItems(d.items).map(function(it){return itemRow(it,k)}).join('')+'</div></div>';
+ h+='<div class="row"><input class="field" id="addItem" placeholder="Add something for today" aria-label="Add something for today"><select id="addCat" class="field" style="width:96px" aria-label="Category">'+CATS.map(function(c){return '<option value="'+c[0]+'"'+(c[0]==='work'?' selected':'')+'>'+c[1]+'</option>'}).join('')+'</select><button class="btn" data-a="addItem" data-k="'+k+'">Add</button></div>';
+ var din=d.items.filter(function(i){return i.kind==='dinner'})[0];
+ if(din)h+='<div class="card between"><div><div class="small muted">Tonight\'s dinner idea</div><div style="font-family:var(--serif);font-weight:600;font-size:19px">'+esc(din.text.replace(/^Dinner: /,''))+'</div></div><button class="btn sm" data-a="go" data-r="dinner">More ideas</button></div>';
+ if(!S.doctor.done)h+='<button class="card" data-a="go" data-r="fitness" style="text-align:left;cursor:pointer;border-color:var(--bodyT)"><div class="lbl" style="color:var(--bodyT)">Pinned</div><div style="font-size:15px">Get abdominal size and early fullness checked'+(S.doctor.booked?' (booked)':'')+'</div></button>';
+ var hasData=Object.keys(S.days).length>2;var lb=S.lastBackup;
+ if(hasData&&cloud.status!=='ok'&&(!lb||(Date.now()-lb)>7*864e5))h+='<button class="card" data-a="go" data-r="settings" style="text-align:left;cursor:pointer"><div class="lbl">Backup</div><div style="font-size:15px">'+(lb?'Last backup over a week ago.':'No backup yet.')+' Save a copy of your data.</div></button>';
+ if(!d.rest)h+='<button class="btn link sm" style="align-self:flex-start" data-a="restDay" data-k="'+k+'">Not feeling well? Make today a rest day</button>';
+ return h+'</div>'+tabbar()}
+
+function vPlan(){var t=addDays(todayKey(),1),k=todayKey(),today=getDay(k,true),ws=weekStart(t),st=weekStats(ws),tg=targetsFor(ws);
+ if(!ui.draft||ui.draft.date!==t){var ex={};today.items.forEach(function(i){if(i.kind==='bible'&&!i.done&&i.chapters)i.chapters.forEach(function(c){ex[bkey(c[0],c[1])]=1})});
+  var base=S.days[t]?JSON.parse(JSON.stringify(S.days[t])):genDay(t,ex);base.items.forEach(function(i){i.inc=true});ui.draft={date:t,day:base}}
+ var dr=ui.draft.day,c=checkable(today.items),n=c.filter(function(i){return i.done}).length;
+ var left=[['Gym',tg.gym-st.gym],['Bible chapters',tg.bible-st.bible],['Family',tg.family-st.family],['Movie night',tg.movie-st.movie],['Bed by 10',tg.bed-st.bed]].filter(function(x){return x[1]>0});
+ var h='<div class="screen noTabs">'+back('today','Cancel');
+ h+='<div><h1>Plan tomorrow</h1><div class="muted">'+longDate(t)+'</div></div>';
+ h+='<div class="card between"><div><div class="lbl">Today, closed</div><div style="margin-top:2px">'+n+' of '+c.length+' done</div></div><button class="btn sm" data-a="go" data-r="journal">'+(today.journal&&today.journal.grateful?'Journal saved':'Write journal')+'</button></div>';
+ h+='<div><div class="lbl" style="margin-bottom:6px">Left this week'+(addDays(ws,0)!==weekStart(k)?' (new week)':'')+'</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+(left.length?left.map(function(x){return '<span class="chip" style="cursor:default">'+x[0]+': '+x[1]+'</span>'}).join(''):'<span class="muted small">All targets met. Well done.</span>')+'</div></div>';
+ var groups=[['faith','Faith','var(--faithT)'],['body','Body','var(--bodyT)'],['work','Work and must-dos','var(--plan)'],['home','Home','var(--home)'],['plan','Evening','var(--plan)'],['rest','Rest','var(--rest)']];
+ h+='<div class="list" style="padding-top:4px">';
+ groups.forEach(function(g){var its=sortItems(dr.items).filter(function(i){return i.cat===g[0]});if(!its.length)return;
+  h+='<div class="lbl" style="padding-top:10px;color:'+g[2]+'">'+g[1]+'</div>'+its.map(function(i){if(i.kind==='gym')return '<div class="item"><input type="checkbox" data-inc="'+i.id+'"'+(i.inc?' checked':'')+' aria-label="Include workout"><select class="field" style="flex:1" data-swapw="'+i.id+'" aria-label="Workout">'+Object.keys(allW()).filter(function(w){return w!=='rest'}).map(function(w){return '<option value="'+w+'"'+(i.workoutType===w?' selected':'')+'>'+esc(wName(w))+'</option>'}).join('')+'</select></div>';return '<label class="item"><input type="checkbox" data-inc="'+i.id+'"'+(i.inc?' checked':'')+'><span class="x">'+esc(i.text)+'</span><span class="small muted">'+(i.time?t12(i.time):'')+'</span></label>'}).join('')});
+ h+='</div>';
+ h+='<div class="row"><input class="field" id="mustDo" placeholder="Add something for tomorrow" aria-label="Add something for tomorrow"><select id="mustCat" class="field" style="width:96px" aria-label="Category">'+CATS.map(function(c){return '<option value="'+c[0]+'"'+(c[0]==='work'?' selected':'')+'>'+c[1]+'</option>'}).join('')+'</select><button class="btn" data-a="addMust">Add</button></div>';
+ h+='<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="chip" data-a="addExtra" data-x="family">+ Family call or time</button><button class="chip" data-a="addExtra" data-x="movie">+ Movie night</button><button class="chip" data-a="go" data-r="dinner">Change dinner</button></div>';
+ h+='<div><label class="lbl" for="tint">Tomorrow I want to be</label><input id="tint" class="txt serif" style="font-style:italic;font-size:18px" data-draft="intention" value="'+esc(dr.intention||'')+'" placeholder="calm and present at home"></div>';
+ h+='<button class="btn dark block" data-a="savePlan">Save tomorrow</button>';
+ return h+'</div>'}
+
+function vWeek(){var tk=todayKey(),cur=weekStart(tk);var ws=route.ws||((S.weeks[cur]&&S.weeks[cur].targets&&new Date().getDay()===0)?cur:(S.weeks[cur]&&S.weeks[cur].targets?addDays(cur,7):cur));
+ var last=addDays(ws,-7),lst=weekStats(last),ltg=targetsFor(last),w=S.weeks[ws]||{},tg=w.targets||JSON.parse(JSON.stringify(targetsFor(last)));
+ if(!ui.wt||ui.wt.ws!==ws)ui.wt={ws:ws,t:tg};var T=ui.wt.t;
+ var h='<div class="screen noTabs">'+back('today','Close');
+ h+='<div><h1>Plan your week</h1><div class="muted">'+shortDate(ws)+' to '+shortDate(addDays(ws,6))+'</div></div>';
+ var rows=[['Gym days',lst.gym,ltg.gym,'var(--body)'],['Bible chapters',lst.bible,ltg.bible,'var(--faith)'],['Prayer',lst.prayer,ltg.prayer,'var(--faith)'],['In bed on time',lst.bed,ltg.bed,'var(--rest)'],['Family',lst.family,ltg.family,'var(--home)']];
+ h+='<div class="card"><div class="lbl" style="margin-bottom:6px">Last week'+(lst.pct!=null?' · '+lst.pct+'% of plan done':'')+'</div>'+rows.map(function(r){var p=r[2]?Math.min(100,Math.round(r[1]/r[2]*100)):0;return '<div class="row" style="min-height:30px;font-size:14px"><span style="width:110px">'+r[0]+'</span><div class="bar" style="flex:1"><i style="width:'+p+'%;background:'+r[3]+'"></i></div><span style="width:50px;text-align:right">'+r[1]+' / '+r[2]+'</span></div>'}).join('')+'</div>';
+ h+='<div class="card"><div class="lbl">Looking back</div>'+[['worked','What worked'],['didnt',"What didn't"],['change','One change']].map(function(f){return '<input class="txt" aria-label="'+f[1]+'" placeholder="'+f[1]+'" data-path="weeks.'+ws+'.review.'+f[0]+'" value="'+esc((w.review||{})[f[0]]||'')+'">'}).join('')+'</div>';
+ var tr=[['gym','Gym days','var(--body)'],['bible','Bible chapters','var(--faith)'],['prayer','Prayer days','var(--faith)'],['bed','In bed on time, nights','var(--rest)'],['family','Family calls or time','var(--home)'],['movie','Movie night','var(--work)']];
+ h+='<div class="card" style="padding-top:4px;padding-bottom:4px"><div class="lbl" style="padding-top:10px">This week\'s targets</div>'+tr.map(function(r){return '<div class="step"><span class="c" style="width:4px;height:22px;border-radius:2px;background:'+r[2]+'"></span><span style="flex:1">'+r[1]+'</span><button data-a="stepT" data-f="'+r[0]+'" data-d="-1" aria-label="Less">−</button><span class="num">'+T[r[0]]+'</span><button data-a="stepT" data-f="'+r[0]+'" data-d="1" aria-label="More">+</button></div>'}).join('')+'</div>';
+ h+='<div><label class="lbl" for="grow">This week I want to grow in</label><input id="grow" class="txt serif" style="font-style:italic;font-size:18px" data-path="weeks.'+ws+'.grow" value="'+esc(w.grow||'')+'" placeholder="patience"></div>';
+ h+='<button class="btn dark block" data-a="saveWeek" data-ws="'+ws+'">Set my week</button>';
+ return h+'</div>'}
+
+function vCalendar(){var tk=todayKey();if(!ui.calMonth)ui.calMonth=tk.slice(0,7);var p=ui.calMonth.split('-'),y=+p[0],m=+p[1]-1,first=new Date(y,m,1),days=new Date(y,m+1,0).getDate();
+ var cells='';for(var i=0;i<first.getDay();i++)cells+='<div></div>';
+ for(var dd=1;dd<=days;dd++){var k=y+'-'+pad(m+1)+'-'+pad(dd),lv=dayLevel(k),st='';
+  if(lv==='full')st='background:var(--ink);color:var(--card);font-weight:600';else if(lv==='some')st='background:#CFC6B6';else if(lv==='rest')st='border-color:var(--line);color:var(--muted)';
+  if(k===tk)st+=';border:2px solid var(--plan);font-weight:600';
+  cells+='<button class="cal" style="'+st+'" data-a="openDay" data-k="'+k+'" aria-label="'+longDate(k)+'">'+dd+'</button>'}
+ var h='<div class="screen"><div class="between"><button class="iconbtn" data-a="mon" data-d="-1" aria-label="Previous month">'+ic('left',18)+'</button><h1 style="font-size:24px">'+MON[m]+' '+y+'</h1><button class="iconbtn" data-a="mon" data-d="1" aria-label="Next month">'+ic('right',18)+'</button></div>';
+ h+='<div class="card" style="padding:12px"><div class="grid7 small muted" style="text-align:center;font-weight:600;margin-bottom:6px"><div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div></div><div class="grid7">'+cells+'</div></div>';
+ h+='<div class="row small muted" style="gap:16px;flex-wrap:wrap"><span class="row" style="gap:6px"><span style="width:14px;height:14px;background:var(--ink);border-radius:3px"></span>All done</span><span class="row" style="gap:6px"><span style="width:14px;height:14px;background:#CFC6B6;border-radius:3px"></span>Some done</span><span class="row" style="gap:6px"><span style="width:14px;height:14px;border:1px solid var(--line);border-radius:3px"></span>Rest day</span></div>';
+ var ws=weekStart(tk),st2=weekStats(ws);
+ h+='<button class="card between" data-a="go" data-r="progress" style="cursor:pointer;text-align:left"><div><div class="lbl">This week</div><div style="font-size:16px;margin-top:2px">'+(st2.pct==null?'No days logged yet':st2.pct+'% of your plan done')+'</div></div><span class="row" style="color:var(--plan);font-weight:600;gap:4px">'+ic('chart',18)+'Progress</span></button>';
+ h+='<button class="btn" data-a="go" data-r="week">Plan a week</button>';
+ return h+'</div>'+tabbar()}
+
+function vDay(){var k=route.k,d=S.days[k],tk=todayKey();
+ var h='<div class="screen">'+back('calendar','Calendar')+'<div><h1>'+longDate(k)+'</h1>'+(d&&d.intention?'<div class="serif muted" style="font-family:var(--serif);font-style:italic;font-size:17px;margin-top:4px">'+esc(d.intention)+'</div>':'')+'</div>';
+ if(!d){h+='<div class="card empty">Nothing recorded for this day.</div>';if(k>=tk)h+='<button class="btn dark" data-a="planDay" data-k="'+k+'">Plan this day</button>';return h+'</div>'+tabbar()}
+ var c=checkable(d.items),n=c.filter(function(i){return i.done}).length;
+ h+='<div class="muted">'+(d.rest?'Rest day':n+' of '+c.length+' done')+'</div>';
+ h+='<div class="between"><div class="lbl">Plan</div><button class="btn link sm" data-a="editDay" data-k="'+k+'">'+(ui.edit===k?'Done editing':'Edit')+'</button></div><div class="list">'+sortItems(d.items).map(function(it){return itemRow(it,k)}).join('')+'</div>';
+ var j=d.journal||{},parts=[['grateful','Grateful for'],['well','Went well'],['better','Do better'],['bible','Bible reflection'],['free','Free write']].filter(function(p){return j[p[0]]});
+ h+='<div class="card"><div class="between"><div class="lbl">Journal</div><button class="btn link sm" data-a="openJournal" data-k="'+k+'">'+(parts.length?'Edit':'Write')+'</button></div>'+(parts.length?parts.map(function(p){return '<div style="margin-top:8px"><div class="small muted">'+p[1]+'</div><div style="font-family:var(--serif);font-size:16px;white-space:pre-wrap">'+esc(j[p[0]])+'</div></div>'}).join(''):'<div class="empty">No entry.</div>')+'</div>';
+ return h+'</div>'+tabbar()}
+
+function vProgress(){var tk=todayKey(),cur=weekStart(tk),wks=[];for(var i=7;i>=0;i--)wks.push(addDays(cur,-7*i));
+ var stats=wks.map(weekStats),labels=wks.map(function(w){var d=parseKey(w);return (d.getMonth()+1)+'/'+d.getDate()});
+ var read=Object.keys(S.bible.read).length,ot=readCount(0,OT_COUNT),nt=readCount(OT_COUNT,BOOKS.length);
+ var h='<div class="screen">'+back('calendar','Calendar')+'<h1>Progress</h1><div class="muted small">Last 8 weeks. Each bar is one week, starting Sunday.</div>';
+ h+='<div class="card"><div class="lbl">Consistency</div><div class="small muted">% of planned items done</div>'+barChart(stats.map(function(s){return s.pct}),labels,'#22201C',{max:100,suffix:'%',label:'Consistency by week'})+'</div>';
+ h+='<div class="card"><div class="lbl" style="color:var(--faithT)">Bible chapters per week</div>'+barChart(stats.map(function(s){return s.bible}),labels,'#A8761A',{goal:targetsFor(cur).bible,label:'Bible chapters by week'})+
+   '<div class="between small" style="margin-top:6px"><span>Whole Bible</span><span><b>'+read+'</b> of '+TOTAL_CH+' ('+Math.round(read/TOTAL_CH*100)+'%)</span></div><div class="bar" style="margin-top:4px"><i style="width:'+(read/TOTAL_CH*100)+'%;background:var(--faith)"></i></div><div class="row small muted" style="gap:16px;margin-top:6px"><span>Old Testament '+ot+' / 929</span><span>New Testament '+nt+' / 260</span></div></div>';
+ h+='<div class="card"><div class="lbl" style="color:var(--bodyT)">Workouts per week</div>'+barChart(stats.map(function(s){return s.gym}),labels,'#B4532A',{goal:targetsFor(cur).gym,max:Math.max(7,targetsFor(cur).gym),label:'Workouts by week'})+'</div>';
+ h+='<div class="card"><div class="lbl" style="color:var(--rest)">In bed on time, nights per week</div>'+barChart(stats.map(function(s){return s.bed}),labels,'#6A4C7A',{max:7,label:'Nights in bed on time'})+'</div>';
+ h+='<div class="card"><div class="lbl">Weight</div>'+lineChart(S.weights.slice(-16))+'</div>';
+ return h+'</div>'+tabbar()}
+
+function vBible(){var read=Object.keys(S.bible.read).length,ot=readCount(0,OT_COUNT),nt=readCount(OT_COUNT,BOOKS.length),nx=nextChapters(chaptersPerDay());
+ if(ui.book==null)ui.book=S.bible.current||0;var bi=ui.book,b=BOOKS[bi],br=bookRead(bi),nextKey=nx.length?bkey(nx[0][0],nx[0][1]):'';
+ var h='<div class="screen"><div class="between" style="align-items:flex-end"><h1>Bible</h1><span class="small muted">'+chaptersPerDay()+' chapter'+(chaptersPerDay()>1?'s':'')+' a day</span></div>';
+ h+='<div class="card"><div class="between" style="align-items:baseline"><div style="font-family:var(--serif);font-size:22px;font-weight:600">'+read+' <span style="font-size:15px;font-weight:500;color:var(--muted)">of 1,189 chapters</span></div><span class="small muted">'+Math.round(read/TOTAL_CH*100)+'%</span></div><div class="bar" style="height:8px;margin-top:8px"><i style="width:'+(read/TOTAL_CH*100)+'%;background:var(--faith)"></i></div><div class="row small muted" style="gap:18px;margin-top:8px"><span>Old Testament <b style="color:var(--ink)">'+ot+'</b> / 929</span><span>New Testament <b style="color:var(--ink)">'+nt+'</b> / 260</span></div></div>';
+ h+='<div class="card dark"><div class="lbl" style="color:#D9CFBD">Next reading</div><div style="font-family:var(--serif);font-size:22px;font-weight:600;margin-top:2px">'+esc(chText(nx))+'</div><div class="row" style="margin-top:10px;gap:8px"><button class="btn" style="flex:1"'+(nx.length?' data-a="read" data-b="'+nx[0][0]+'" data-c="'+nx[0][1]+'"':'')+'>Read now</button><button class="btn" style="flex:1;background:transparent;color:var(--card);border-color:#6F6A60" data-a="markNext">Mark as read</button></div></div>';
+ h+='<div class="card"><div class="between" style="align-items:baseline"><h2>'+esc(b[0])+'</h2><span class="small muted">'+br+' of '+b[1]+' · tap to mark</span></div><div class="chg" style="margin-top:10px">';
+ for(var c=1;c<=b[1];c++){var k=bkey(b[2],c);h+='<button class="'+(S.bible.read[k]?'r':(k===nextKey?'n':''))+'" data-a="ch" data-b="'+b[2]+'" data-c="'+c+'" aria-label="'+esc(b[0])+' '+c+(S.bible.read[k]?', read':'')+'">'+c+'</button>'}
+ h+='</div><div class="small muted" style="margin-top:8px">Tap a number to mark it read. <button class="btn link sm" style="min-height:28px" data-a="read" data-b="'+b[2]+'" data-c="'+(nx.length&&nx[0][0]===b[2]?nx[0][1]:1)+'">Read '+esc(b[0])+'</button></div>'+(bi!==S.bible.current?'<button class="btn sm" style="margin-top:10px" data-a="setCurrent" data-i="'+bi+'">Read this book next</button>':'<div class="small muted" style="margin-top:8px">Your current book</div>')+'</div>';
+ h+='<div class="seg"><button class="'+(ui.bibleT===0?'on':'')+'" data-a="bt" data-t="0">Old Testament</button><button class="'+(ui.bibleT===1?'on':'')+'" data-a="bt" data-t="1">New Testament</button></div>';
+ var from=ui.bibleT===0?0:OT_COUNT,to=ui.bibleT===0?OT_COUNT:BOOKS.length;h+='<div class="list">';
+ for(var i=from;i<to;i++){var r=bookRead(i),tot=BOOKS[i][1];h+='<button class="item" style="width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left;cursor:pointer;padding:0" data-a="book" data-i="'+i+'"><span class="x"'+(i===bi?' style="font-weight:600"':'')+'>'+esc(BOOKS[i][0])+'</span><span class="bar" style="width:80px"><i style="width:'+(r/tot*100)+'%;background:var(--faith)"></i></span><span class="small" style="width:56px;text-align:right;'+(r===tot?'color:var(--home);font-weight:600':'color:var(--muted)')+'">'+(r===tot?'Done':r+' / '+tot)+'</span></button>'}
+ return h+'</div></div>'+tabbar()}
+
+function vRead(){var code=route.b,ch=+route.c,bi=bookIndex(code),b=BOOKS[bi],book=BIBLE[code],read=isRead(code,ch);
+ var prev=ch>1?[code,ch-1]:(bi>0?[BOOKS[bi-1][2],BOOKS[bi-1][1]]:null),next=ch<b[1]?[code,ch+1]:(bi<BOOKS.length-1?[BOOKS[bi+1][2],1]:null);
+ var h='<div class="screen noTabs" style="gap:10px"><div class="between" style="min-height:44px"><button class="btn link" data-a="go" data-r="'+(route.from||'bible')+'">'+ic('left',18)+'Back</button><div class="row" style="gap:6px"><button class="iconbtn" data-a="rsize" data-d="-1" aria-label="Smaller text" style="font-size:14px">A</button><button class="iconbtn" data-a="rsize" data-d="1" aria-label="Larger text" style="font-size:20px">A</button></div></div>';
+ h+='<div><div class="lbl" style="color:var(--faithT)">World English Bible</div><h1>'+esc(b[0])+' '+ch+'</h1></div>';
+ if(!book){loadBook(code).then(function(){if(route.name==='read'&&route.b===code)render(true)}).catch(function(){var el=document.getElementById('rd');if(el)el.innerHTML='<div class="empty">Could not load this book. Connect to the internet once and try again.</div>'});h+='<div id="rd" class="empty">Loading...</div>'}
+ else{h+='<div class="reader" style="--rs:'+(S.settings.readSize||19)+'px">'+(book[ch-1]||[]).map(function(p){return '<p>'+p.map(function(seg){return (seg[0]?'<sup>'+seg[0]+'</sup>':'')+esc(seg[1])}).join('')+'</p>'}).join('')+'</div>'}
+ h+='<button class="btn block '+(read?'':'dark')+'" data-a="readMark" data-b="'+code+'" data-c="'+ch+'">'+(read?'Read ✓ (tap to undo)':'Mark '+esc(b[0])+' '+ch+' as read')+'</button>';
+ h+='<div class="row" style="gap:8px">'+(prev?'<button class="btn" style="flex:1" data-a="read" data-b="'+prev[0]+'" data-c="'+prev[1]+'">'+ic('left',16)+esc(refName(prev[0],prev[1]))+'</button>':'<span style="flex:1"></span>')+(next?'<button class="btn" style="flex:1" data-a="read" data-b="'+next[0]+'" data-c="'+next[1]+'">'+esc(refName(next[0],next[1]))+ic('right',16)+'</button>':'')+'</div>';
+ h+='<button class="btn link sm" data-a="openJournal" data-k="'+todayKey()+'">Write a reflection</button>';
+ h+='<div class="small muted">Scripture from the World English Bible (public domain).</div>';
+ return h+'</div>'}
+function vFitness(){var tk=todayKey(),ws=weekStart(tk),st=weekStats(ws),tg=targetsFor(ws),plan=S.settings.plan7;
+ var h='<div class="screen"><div class="between" style="align-items:flex-end"><h1>Fitness</h1><span class="small muted">'+st.gym+' of '+tg.gym+' this week</span></div>';
+ h+='<div class="card" style="display:flex;justify-content:space-between;padding:12px 8px">';
+ for(var i=0;i<7;i++){var k=addDays(ws,i),d=S.days[k],done=d&&(d.workout||d.items.some(function(x){return x.kind==='gym'&&x.done})),rest=d&&d.rest,isT=k===tk;
+  var sty=done?'background:var(--bodyT);color:var(--card);font-weight:600':(isT?'border:2px solid var(--bodyT);color:var(--bodyT)':(rest||plan[i]==='rest'?'border:1px dashed var(--line)':'border:1px solid var(--line)'));
+  var lab=d&&d.workout?wName(d.workout.type):wName(plan[i]);
+  h+='<div style="display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;'+(isT?'color:var(--ink);font-weight:600':'color:var(--muted)')+'">'+DOW[i][0]+'<span style="width:34px;height:34px;border-radius:17px;display:flex;align-items:center;justify-content:center;'+sty+'">'+parseKey(k).getDate()+'</span>'+lab+'</div>'}
+ h+='</div>';
+ var tw=(S.days[tk]||{}).workout;
+ h+='<div><div class="lbl" style="margin-bottom:6px">Log today\'s session</div>'+(tw?'<div class="card between" style="margin-bottom:8px"><span>Logged: <b>'+wName(tw.type)+'</b>'+(tw.min?', '+tw.min+' min':'')+'</span><button class="btn link sm" data-a="unlog">Undo</button></div>':'')+
+  '<div class="row" style="margin-bottom:8px"><label for="mins" class="small" style="white-space:nowrap">Minutes (optional)</label><input id="mins" type="number" inputmode="numeric" class="field" style="width:100px" placeholder="30"></div>'+
+  '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">'+Object.keys(allW()).filter(function(w){return w!=='rest'}).map(function(w){return '<button class="btn" style="min-height:52px" data-a="logW" data-w="'+w+'">'+esc(wName(w))+'</button>'}).join('')+'</div>'+
+  '<button class="btn link sm" style="margin-top:6px" data-a="restDay" data-k="'+tk+'">Not feeling well? Mark today as a rest day</button></div>';
+ var lastW=S.weights[S.weights.length-1];
+ h+='<div class="card"><div class="between"><div class="lbl">Weekly weigh-in</div>'+(lastW?'<span class="small muted">Last: '+lastW.lb+' lb, '+shortDate(lastW.date)+'</span>':'')+'</div>'+lineChart(S.weights.slice(-12))+'<div class="row" style="margin-top:6px"><label for="wt" style="flex:1">Weight today</label><input id="wt" type="number" inputmode="decimal" step="0.1" class="field" style="width:100px" placeholder="lb"><button class="btn dark" data-a="saveW">Save</button></div></div>';
+ h+='<div class="card" style="border-color:var(--bodyT)"><div class="lbl" style="color:var(--bodyT)">Pinned</div><div style="margin-top:2px">Get abdominal size and early fullness checked by a doctor.</div><div class="row" style="gap:20px;margin-top:8px"><label class="row" style="gap:8px;min-height:36px"><input type="checkbox" data-doc="booked"'+(S.doctor.booked?' checked':'')+'>Booked</label><label class="row" style="gap:8px;min-height:36px"><input type="checkbox" data-doc="done"'+(S.doctor.done?' checked':'')+'>Done</label></div></div>';
+ h+='<button class="btn" data-a="go" data-r="progress">'+ic('chart',18)+'See progress</button><button class="btn link sm" data-a="go" data-r="settings">Add or change workout types</button>';
+ return h+'</div>'+tabbar()}
+
+function vJournal(){var k=route.k||todayKey(),d=getDay(k,k===todayKey())||{journal:{}};if(!S.days[k]){S.days[k]={items:[],intention:'',journal:{},planned:false}}d=S.days[k];var j=d.journal||(d.journal={});
+ var bib=d.items.filter(function(i){return i.kind==='bible'})[0];
+ var h='<div class="screen"><div class="between" style="align-items:flex-end"><div><h1>Journal</h1><div class="muted">'+longDate(k)+'</div></div>'+(k!==todayKey()?'<button class="btn sm" data-a="openJournal" data-k="'+todayKey()+'">Today</button>':'')+'</div>';
+ h+='<div class="card">'+[['grateful','Grateful for','one thing'],['well','Went well today','one line'],['better','Do better tomorrow','one line']].map(function(f){return '<label class="lbl" for="j_'+f[0]+'">'+f[1]+'</label><input id="j_'+f[0]+'" class="txt serif" style="margin-bottom:12px" placeholder="'+f[2]+'" data-path="days.'+k+'.journal.'+f[0]+'" value="'+esc(j[f[0]]||'')+'">'}).join('')+
+  '<label class="lbl" for="j_bible">Bible reflection'+(bib&&bib.chapters?' · '+esc(chText(bib.chapters)):'')+'</label><input id="j_bible" class="txt serif" style="margin-bottom:12px" placeholder="What stood out?" data-path="days.'+k+'.journal.bible" value="'+esc(j.bible||'')+'">'+
+  '<label class="lbl" for="j_free">Free write</label><textarea id="j_free" class="txt serif" placeholder="As much or as little as you want" data-path="days.'+k+'.journal.free">'+esc(j.free||'')+'</textarea></div>';
+ var q=ui.q.toLowerCase(),ent=Object.keys(S.days).filter(function(x){var jj=S.days[x].journal||{};return x!==k&&(jj.grateful||jj.well||jj.better||jj.bible||jj.free)}).sort().reverse()
+  .filter(function(x){if(!q)return true;var jj=S.days[x].journal;return [jj.grateful,jj.well,jj.better,jj.bible,jj.free,S.days[x].intention].join(' ').toLowerCase().indexOf(q)>=0});
+ h+='<div><div class="lbl" style="margin-bottom:6px">Past entries</div><input class="field" placeholder="Search your journal" aria-label="Search your journal" data-search value="'+esc(ui.q)+'" style="margin-bottom:6px"><div id="entries">'+entriesHtml(ent)+'</div></div>';
+ return h+'</div>'+tabbar()}
+function entriesHtml(ent){if(!ent.length)return '<div class="empty">'+(ui.q?'No matches.':'Your past entries will show here.')+'</div>';
+ return ent.slice(0,60).map(function(x){var jj=S.days[x].journal,first=jj.grateful||jj.well||jj.free||jj.bible||jj.better||'';return '<button class="ent" data-a="openJournal" data-k="'+x+'"><span style="width:60px;font-weight:600;flex:none">'+shortDate(x)+'</span><span class="muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(first)+'</span></button>'}).join('')}
+
+function vDinner(){var list=DINNERS.filter(function(x){return x.k===ui.dinnerKind});var it=list[ui.dinnerIdx%list.length],fav=S.favorites.indexOf(it.n)>=0;
+ var h='<div class="screen noTabs">'+back('today','Back to today')+'<h1>What\'s for dinner?</h1>';
+ h+='<div class="seg"><button class="'+(ui.dinnerKind==='quick'?'on':'')+'" data-a="dk" data-k="quick">Quick weekday</button><button class="'+(ui.dinnerKind==='weekend'?'on':'')+'" data-a="dk" data-k="weekend">Weekend cooking</button></div>';
+ h+='<div class="card" style="padding:18px 16px"><div class="lbl" style="color:var(--home)">Idea</div><div style="font-family:var(--serif);font-weight:600;font-size:32px;margin-top:4px">'+esc(it.n)+'</div><div class="muted">'+esc(it.d)+'</div><div class="small muted" style="margin-top:8px">About '+it.t+' min</div>'+
+  '<div class="row" style="gap:8px;margin-top:16px"><button class="btn dark" style="flex:1" data-a="dnext">Another idea</button><button class="btn" style="flex:1" data-a="dfav" data-n="'+esc(it.n)+'">'+(fav?'Saved':'Save')+'</button></div>'+
+  '<button class="btn block" style="margin-top:8px" data-a="duse" data-n="'+esc(it.n)+'">Use for tonight</button>'+(ui.draft?'<button class="btn block" style="margin-top:8px" data-a="dtom" data-n="'+esc(it.n)+'">Use for tomorrow</button>':'')+'</div>';
+ h+='<div><div class="lbl" style="margin-bottom:2px">Favorites</div>'+(S.favorites.length?'<div class="list">'+S.favorites.map(function(f,i){return '<div class="item"><span class="x">'+esc(f)+'</span><button class="btn link sm" data-a="duse" data-n="'+esc(f)+'">Tonight</button><button class="btn link sm" data-a="dunfav" data-i="'+i+'" aria-label="Remove '+esc(f)+'">Remove</button></div>'}).join('')+'</div>':'<div class="empty">Save dishes you like and they\'ll show here.</div>')+'</div>';
+ h+='<div class="small muted">Ideas only. Nothing to log. Ideas lean toward soups, steamed and grilled dishes, and away from fried and heavy meals.</div>';
+ return h+'</div>'}
+
+function vSettings(){var s=S.settings;
+ var h='<div class="screen noTabs">'+back('today','Done')+'<h1>Settings</h1>';
+ h+='<div class="card"><div class="lbl" style="margin-bottom:4px">Daily times</div>'+[['wake','Wake up'],['bible','Bible time'],['workStart','Work starts'],['workEnd','Work ends'],['gym','Gym / walk (weekdays)'],['dinner','Dinner'],['plan','Journal + plan'],['bed','In bed by']].map(function(f){return '<div class="between" style="min-height:52px;border-bottom:1px solid var(--rule2)"><label for="s_'+f[0]+'">'+f[1]+'</label><input id="s_'+f[0]+'" type="time" class="field" style="width:150px" data-path="settings.'+f[0]+'" value="'+s[f[0]]+'"></div>'}).join('')+'<div class="small muted" style="margin-top:8px">New times apply to days you haven\'t planned yet.</div></div>';
+ h+='<div class="card"><div class="lbl" style="margin-bottom:4px">Weekly workouts</div>'+workoutSelects()+'</div>';
+ var aw=allW();
+ h+='<div class="card"><div class="lbl" style="margin-bottom:4px">Workout types</div><div class="small muted" style="margin-bottom:6px">Add your own (Basketball, Swim, Bike) or hide ones you don\'t use.</div>'+
+  Object.keys(BASE_WORKOUTS).filter(function(w){return w!=='rest'}).map(function(w){var hid=(S.hiddenW||[]).indexOf(w)>=0;return '<div class="item"><span class="x'+(hid?' muted':'')+'">'+BASE_WORKOUTS[w]+(hid?' (hidden)':'')+'</span><button class="btn link sm" data-a="hideW" data-w="'+w+'">'+(hid?'Show':'Hide')+'</button></div>'}).join('')+
+  (S.customW||[]).map(function(c){return '<div class="item"><span class="x">'+esc(c.name)+'</span><button class="btn link sm" data-a="rmW" data-w="'+c.id+'">Remove</button></div>'}).join('')+
+  '<div class="row" style="margin-top:8px"><input class="field" id="newW" placeholder="New workout type" aria-label="New workout type"><button class="btn" data-a="addW">Add</button></div></div>';
+ var dl=['S','M','T','W','T','F','S'];
+ h+='<div class="card"><div class="lbl" style="margin-bottom:4px">My routines</div><div class="small muted" style="margin-bottom:6px">Activities that repeat on set days, like Church on Sunday or Grade papers on weekdays. They appear on days you haven\'t planned yet.</div>'+
+  ((S.routines||[]).length?(S.routines||[]).map(function(r){return '<div class="item"><span class="c" style="background:'+CAT[r.cat]+'"></span><span class="x">'+esc(r.text)+'<br><span class="small muted">'+(r.time?t12(r.time)+' · ':'')+(r.days.length===7?'Every day':r.days.map(function(d){return DOW[d].slice(0,3)}).join(', '))+'</span></span><button class="btn link sm" data-a="rmR" data-id="'+r.id+'">Remove</button></div>'}).join(''):'<div class="empty">No routines yet.</div>')+
+  '<div style="border-top:1px solid var(--rule2);padding-top:10px;margin-top:4px;display:flex;flex-direction:column;gap:8px"><input class="field" id="rText" placeholder="Activity, e.g. Church" aria-label="Routine name"><div class="row" style="gap:8px"><select id="rCat" class="field" aria-label="Category">'+CATS.map(function(c){return '<option value="'+c[0]+'">'+c[1]+'</option>'}).join('')+'</select><input id="rTime" type="time" class="field" aria-label="Time"></div><div class="row" style="gap:4px;justify-content:space-between">'+dl.map(function(x,i){var on=(ui.rDays||[]).indexOf(i)>=0;return '<button class="chip'+(on?' on':'')+'" style="width:40px;justify-content:center;padding:0" data-a="rDay" data-i="'+i+'" aria-label="'+DOW[i]+'" aria-pressed="'+on+'">'+x+'</button>'}).join('')+'</div><button class="btn dark" data-a="addR">Add routine</button></div></div>';
+ h+='<div class="card"><div class="between" style="min-height:52px"><label for="bv">Bible app version number</label><input id="bv" class="field" style="width:90px" data-path="settings.bibleVersion" value="'+esc(s.bibleVersion)+'"></div><div class="small muted">MONDO has the World English Bible built in. This number is only for the optional YouVersion link. 111 is NIV, 1 is KJV.</div></div>';
+ h+='<div class="card"><div class="lbl" style="margin-bottom:4px">Your data</div><div class="small muted" style="margin-bottom:10px">'+esc(cloudText())+' A backup file is still a good idea once in a while.'+(S.lastBackup?' Last backup: '+new Date(S.lastBackup).toLocaleDateString()+'.':'')+(storageOK?'':' <b style="color:var(--bodyT)">Warning: saving failed on this device.</b>')+'</div>'+
+  '<div class="row" style="gap:8px"><button class="btn dark" style="flex:1" data-a="export">Back up</button><button class="btn" style="flex:1" data-a="import">Restore</button></div>'+
+  '<button class="btn link sm" style="margin-top:12px;color:var(--bodyT)" data-a="erase">'+(ui.eraseArm?'Tap again to erase everything':'Erase all data')+'</button></div>';
+ h+='<div class="small muted" style="text-align:center">MONDO · version 1</div>';
+ return h+'</div>'}
+
+/* ---------- Render ---------- */
+var VIEWS={read:vRead,setup:vSetup,today:vToday,plan:vPlan,week:vWeek,calendar:vCalendar,day:vDay,progress:vProgress,bible:vBible,fitness:vFitness,journal:vJournal,dinner:vDinner,settings:vSettings};
+var app=document.getElementById('app');
+function render(keepScroll){var y=window.scrollY;app.innerHTML=(VIEWS[route.name]||vToday)();if(keepScroll)window.scrollTo(0,y);else window.scrollTo(0,0)}
+function go(r,extra){route={name:r};for(var k in extra||{})route[k]=extra[k];if(r!=='plan'&&r!=='dinner')ui.draft=null;if(r!=='settings')ui.eraseArm=false;ui.edit=null;render(false)}
+function toast(msg){document.querySelectorAll('.toast').forEach(function(x){x.remove()});var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},1800)}
+function setPath(path,val){var p=path.split('.'),o=S;for(var i=0;i<p.length-1;i++){if(o[p[i]]==null||typeof o[p[i]]!=='object')o[p[i]]={};o=o[p[i]]}o[p[p.length-1]]=val;save()}
+function findItem(k,id){var d=S.days[k];if(!d)return null;for(var i=0;i<d.items.length;i++)if(d.items[i].id===id)return d.items[i];return null}
+
+var A={
+ go:function(el){go(el.dataset.r)},
+ finishSetup:function(){S.setup=true;save();go('today')},
+ addItem:function(el){var inp=document.getElementById('addItem'),v=inp.value.trim();if(!v)return;var d=getDay(el.dataset.k,true);var sel=document.getElementById('addCat');d.items.push(mk('task',sel?sel.value:'work',v,'',{}));inp.value='';save();render(true)},
+ rmItem:function(el){var d=S.days[el.dataset.k];if(!d)return;var it=findItem(el.dataset.k,el.dataset.id);if(it&&it.kind==='bible'&&it.done&&it.chapters)it.chapters.forEach(function(c){setRead(c[0],c[1],false)});d.items=d.items.filter(function(i){return i.id!==el.dataset.id});save();render(true)},
+ editDay:function(el){ui.edit=ui.edit===el.dataset.k?null:el.dataset.k;render(true)},
+ restDay:function(el){var d=getDay(el.dataset.k,true);d.rest=!d.rest;save();render(true);toast(d.rest?'Rest day. Take care of yourself.':'Rest day removed')},
+ addMust:function(){var inp=document.getElementById('mustDo'),v=inp.value.trim();if(!v)return;var sel=document.getElementById('mustCat');var it=mk('task',sel?sel.value:'work',v,'',{});it.inc=true;ui.draft.day.items.push(it);render(true)},
+ addExtra:function(el){var x=el.dataset.x,it=x==='family'?mk('family','home','Call family or family time','',{}):mk('movie','rest','Movie night','20:00',{});it.inc=true;ui.draft.day.items.push(it);render(true)},
+ savePlan:function(){var dr=ui.draft,day=dr.day,old=S.days[dr.date];day.items=day.items.filter(function(i){return i.inc}).map(function(i){delete i.inc;return i});day.planned=true;if(old){day.journal=old.journal||{};day.workout=old.workout}S.days[dr.date]=day;ui.draft=null;save();go('today');toast('Tomorrow is ready')},
+ stepT:function(el){var f=el.dataset.f,T=ui.wt.t;T[f]=Math.max(0,Math.min(f==='bible'?70:7,(T[f]||0)+(+el.dataset.d)));render(true)},
+ saveWeek:function(el){var ws=el.dataset.ws;if(!S.weeks[ws])S.weeks[ws]={};S.weeks[ws].targets=ui.wt.t;ui.wt=null;save();go('today');toast('Week set')},
+ mon:function(el){var p=ui.calMonth.split('-'),d=new Date(+p[0],+p[1]-1+(+el.dataset.d),1);ui.calMonth=d.getFullYear()+'-'+pad(d.getMonth()+1);render(true)},
+ openDay:function(el){go('day',{k:el.dataset.k})},
+ planDay:function(el){var k=el.dataset.k;if(k===addDays(todayKey(),1)){go('plan');return}getDay(k,true);render(true)},
+ openJournal:function(el){go('journal',{k:el.dataset.k})},
+ markNext:function(){var nx=nextChapters(chaptersPerDay()),tk=todayKey();nx.forEach(function(c){setRead(c[0],c[1],true,tk)});var d=S.days[tk];if(d)d.items.forEach(function(i){if(i.kind==='bible'&&i.chapters&&i.chapters.every(function(c){return isRead(c[0],c[1])}))i.done=true});save();render(true);toast('Marked '+chText(nx))},
+ ch:function(el){var code=el.dataset.b,c=+el.dataset.c,on=!isRead(code,c);setRead(code,c,on,todayKey());save();render(true)},
+ setCurrent:function(el){S.bible.current=+el.dataset.i;save();render(true);toast('Next reading updated')},
+ read:function(el){var from=route.name==='read'?route.from:route.name;go('read',{b:el.dataset.b,c:el.dataset.c,from:from==='today'||from==='bible'||from==='journal'?from:'bible'})},
+ readMark:function(el){var code=el.dataset.b,c=+el.dataset.c,on=!isRead(code,c),tk=todayKey();setRead(code,c,on,tk);var d=S.days[tk];if(d)d.items.forEach(function(i){if(i.kind==='bible'&&i.chapters)i.done=i.chapters.every(function(x){return isRead(x[0],x[1])})});save();render(true);if(on)toast(refName(code,c)+' marked read')},
+ rsize:function(el){S.settings.readSize=Math.max(15,Math.min(26,(S.settings.readSize||19)+2*(+el.dataset.d)));save();render(true)},
+ bt:function(el){ui.bibleT=+el.dataset.t;render(true)},
+ book:function(el){ui.book=+el.dataset.i;render(false)},
+ logW:function(el){var tk=todayKey(),d=getDay(tk,true),m=+document.getElementById('mins').value||0,w=el.dataset.w;d.workout={type:w,min:m};var g=d.items.filter(function(i){return i.kind==='gym'})[0];if(g)g.done=true;else d.items.push(mk('gym','body',wName(w),S.settings.gym,{done:true,workoutType:w}));d.rest=false;save();render(true);toast(wName(w)+' logged')},
+ unlog:function(){var d=S.days[todayKey()];if(d){delete d.workout;d.items.forEach(function(i){if(i.kind==='gym')i.done=false})}save();render(true)},
+ saveW:function(){var v=parseFloat(document.getElementById('wt').value);if(!(v>50&&v<700)){toast('Enter your weight in pounds');return}var tk=todayKey();S.weights=S.weights.filter(function(w){return w.date!==tk});S.weights.push({date:tk,lb:Math.round(v*10)/10});S.weights.sort(function(a,b){return a.date.localeCompare(b.date)});save();render(true);toast('Weight saved')},
+ dk:function(el){ui.dinnerKind=el.dataset.k;ui.dinnerIdx=0;render(true)},
+ dnext:function(){ui.dinnerIdx++;render(true)},
+ dfav:function(el){var n=el.dataset.n,i=S.favorites.indexOf(n);if(i<0)S.favorites.push(n);else S.favorites.splice(i,1);save();render(true)},
+ dunfav:function(el){S.favorites.splice(+el.dataset.i,1);save();render(true)},
+ duse:function(el){var d=getDay(todayKey(),true),n=el.dataset.n,it=d.items.filter(function(i){return i.kind==='dinner'})[0];if(it)it.text='Dinner: '+n;else d.items.push(mk('dinner','home','Dinner: '+n,S.settings.dinner,{}));save();toast('Tonight: '+n);go('today')},
+ dtom:function(el){var n=el.dataset.n,it=ui.draft.day.items.filter(function(i){return i.kind==='dinner'})[0];if(it)it.text='Dinner: '+n;route={name:'plan'};render(false);toast('Tomorrow: '+n)},
+ export:function(){var data=JSON.stringify(S,null,1),name='mondo-backup-'+todayKey()+'.json';var done=function(){S.lastBackup=Date.now();save();render(true);toast('Backup saved')};
+  if(cloud.dl){cloud.dl.save({filename:name,data:data}).then(done).catch(function(){toast('Backup not saved')});return}
+  try{var file=new File([data],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'MONDO backup'}).then(done).catch(function(){});return}}catch(e){}
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);done()},
+ import:function(){document.getElementById('importFile').click()},
+ addW:function(){var inp=document.getElementById('newW'),v=inp.value.trim();if(!v)return;S.customW=S.customW||[];S.customW.push({id:'c_'+uid(),name:v});save();render(true);toast(v+' added')},
+ rmW:function(el){S.customW=(S.customW||[]).filter(function(c){return c.id!==el.dataset.w});S.settings.plan7=S.settings.plan7.map(function(w){return w===el.dataset.w?'rest':w});save();render(true)},
+ hideW:function(el){var w=el.dataset.w;S.hiddenW=S.hiddenW||[];var i=S.hiddenW.indexOf(w);if(i<0){S.hiddenW.push(w);S.settings.plan7=S.settings.plan7.map(function(x){return x===w?'rest':x})}else S.hiddenW.splice(i,1);save();render(true)},
+ rDay:function(el){ui.rDays=ui.rDays||[];var i=+el.dataset.i,j=ui.rDays.indexOf(i);if(j<0)ui.rDays.push(i);else ui.rDays.splice(j,1);var keep={t:document.getElementById('rText').value,c:document.getElementById('rCat').value,m:document.getElementById('rTime').value};render(true);document.getElementById('rText').value=keep.t;document.getElementById('rCat').value=keep.c;document.getElementById('rTime').value=keep.m},
+ addR:function(){var t=document.getElementById('rText').value.trim();if(!t){toast('Name the activity');return}if(!ui.rDays||!ui.rDays.length){toast('Pick at least one day');return}S.routines=S.routines||[];S.routines.push({id:uid(),text:t,cat:document.getElementById('rCat').value,time:document.getElementById('rTime').value,days:ui.rDays.slice().sort()});ui.rDays=[];
+  var tk=todayKey();for(var i=0;i<14;i++){var k=addDays(tk,i),d=S.days[k],r=S.routines[S.routines.length-1];if(d&&!d.planned&&k>tk&&r.days.indexOf(parseKey(k).getDay())>=0)d.items.push(mk('routine',r.cat,r.text,r.time,{rid:r.id}))}
+  save();render(true);toast(t+' added')},
+ rmR:function(el){S.routines=(S.routines||[]).filter(function(r){return r.id!==el.dataset.id});save();render(true)},
+ erase:function(){if(!ui.eraseArm){ui.eraseArm=true;render(true);return}S=defaults();save();ui.eraseArm=false;go('setup')}
+};
+
+document.addEventListener('click',function(e){var el=e.target.closest('[data-a]');if(!el)return;var f=A[el.dataset.a];if(f){if(el.tagName==='A'&&el.getAttribute('href')==='#')e.preventDefault();f(el,e)}});
+document.addEventListener('change',function(e){var t=e.target;
+ if(t.dataset.toggle){var p=t.dataset.toggle.split('|'),k=p[0],it=findItem(k,p[1]);if(!it)return;it.done=t.checked;
+  if(it.kind==='bible'&&it.chapters)it.chapters.forEach(function(c){setRead(c[0],c[1],it.done,k)});
+  save();render(true);return}
+ if(t.dataset.inc){var di=ui.draft.day.items.filter(function(i){return i.id===t.dataset.inc})[0];if(di)di.inc=t.checked;return}
+ if(t.dataset.swapw){var gi=ui.draft.day.items.filter(function(i){return i.id===t.dataset.swapw})[0];if(gi){gi.workoutType=t.value;gi.text=wName(t.value)}return}
+ if(t.dataset.doc){S.doctor[t.dataset.doc]=t.checked;if(t.dataset.doc==='done'&&t.checked)S.doctor.booked=true;save();render(true);return}
+ if(t.dataset.plan7){S.settings.plan7[+t.dataset.plan7]=t.value;save();return}
+ if(t.dataset.path&&t.type==='time'){setPath(t.dataset.path,t.value);return}
+ if(t.id==='importFile'&&t.files&&t.files[0]){var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);if(!d||d.v!==1||!d.days)throw 0;S=merge(defaults(),d);S.setup=true;save();go('today');toast('Data restored')}catch(err){toast('That file is not a MONDO backup')}t.value=''};r.readAsText(t.files[0])}
+});
+document.addEventListener('input',function(e){var t=e.target;
+ if(t.dataset.path&&t.type!=='time'){setPath(t.dataset.path,t.value);return}
+ if(t.dataset.draft&&ui.draft){ui.draft.day[t.dataset.draft]=t.value;return}
+ if(t.hasAttribute('data-search')){ui.q=t.value;var k=route.k||todayKey(),q=ui.q.toLowerCase();
+  var ent=Object.keys(S.days).filter(function(x){var jj=S.days[x].journal||{};return x!==k&&(jj.grateful||jj.well||jj.better||jj.bible||jj.free)}).sort().reverse().filter(function(x){if(!q)return true;var jj=S.days[x].journal;return [jj.grateful,jj.well,jj.better,jj.bible,jj.free,S.days[x].intention].join(' ').toLowerCase().indexOf(q)>=0});
+  document.getElementById('entries').innerHTML=entriesHtml(ent)}
+});
+document.addEventListener('keydown',function(e){if(e.key!=='Enter')return;var t=e.target;if(t.id==='addItem')A.addItem({dataset:{k:todayKey()}});if(t.id==='mustDo')A.addMust()});
+var lastDay=todayKey();
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&todayKey()!==lastDay){lastDay=todayKey();if(route.name==='today')render(false)}});
+
+render(false);
+(async function(){if(!(window.claude&&claude.use))return;
+ try{var dl=await claude.use('downloads');cloud.dl=dl}catch(e){}
+ try{var db=await claude.use('db'),user=await claude.use('user');if(!db||!user)return;var uid=await user.id();if(!uid)return;
+  cloud.col=db.collection('data/users/'+uid);setCloud('loading');var to=setTimeout(function(){setCloud('error')},10000);
+  var snap=await cloud.col.get();clearTimeout(to);var core=null,days={};
+  snap.docs.forEach(function(d){var x=d.data()||{};if(d.id==='core'&&x.state){core=JSON.parse(x.state);cloud.synced.core=x.state}else if(d.id.indexOf('m-')===0&&x.days){cloud.synced[d.id]=x.days;var dd=JSON.parse(x.days);for(var k in dd)days[k]=dd[k]}});
+  if(core){S=merge(defaults(),core);S.days=days;try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}if(S.setup&&route.name==='setup')route={name:'today'}}
+  cloud.ready=true;setCloud('ok');if(!core&&S.setup)cloudPush();render(true)
+ }catch(e){setCloud('error')}})();
+</script>
+</body>
+</html>
