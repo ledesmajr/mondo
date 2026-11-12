@@ -183,7 +183,8 @@ function cloudPush(){if(!cloud.ready)return;clearTimeout(cloud.timer);cloud.time
 function setCloud(st){if(cloud.status===st)return;cloud.status=st;if(route.name==='settings')render(true)}
 function cloudText(){return {ok:'Saved to your Claude account. Open MONDO on any device signed in to Claude and your progress is there.',loading:'Loading your data...',local:'Saved on this device only.',error:'Could not reach your Claude account. Changes are saved on this device and will sync when it reconnects.',full:'Your Claude storage for MONDO is full. Back up, then contact support.'}[cloud.status]}
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
-if(applyFresh()){try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}}
+function migrateBible(){var tk=keyOf(new Date()),ch=false;for(var k in S.days){if(k<tk)continue;S.days[k].items.forEach(function(i){if(i.kind==='bible'&&i.chapters&&!i.done){i.text='Bible reading';delete i.chapters;ch=true}})}return ch}
+if(applyFresh()|migrateBible()){try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}}
 
 var route={name:S.setup?'today':'setup'};
 var ui={calMonth:null,bibleT:1,book:null,dinnerKind:'quick',dinnerIdx:0,q:'',draft:null,eraseArm:false};
@@ -210,14 +211,14 @@ function verseText(book,ch,v){var out='',on=false;(book[ch-1]||[]).forEach(funct
 var VOTD=[['PSA',23,1],['ISA',41,10],['PHP',4,13],['JOS',1,9],['PRO',3,5],['MAT',11,28],['ROM',8,28],['JER',29,11],['PSA',46,1],['2CO',12,9],['ISA',40,31],['LAM',3,23],['PHP',4,6],['MAT',6,33],['GAL',6,9],['PSA',119,105],['COL',3,23],['HEB',12,1],['1CO',16,14],['PSA',37,5],['JHN',14,27],['PRO',16,3],['ROM',12,2],['MIC',6,8],['PSA',90,12],['EPH',4,32],['JAS',1,5],['1PE',5,7],['PSA',139,14],['2TI',1,7],['ROM',15,13],['PRO',4,23],['ISA',26,3],['PSA',121,2],['MAT',5,16],['JHN',15,5],['PSA',27,1],['ECC',3,1],['1TH',5,16],['HEB',11,1],['PSA',143,8],['DEU',31,6],['PRO',27,17],['ROM',5,8],['EPH',2,10],['PSA',16,11],['ZEP',3,17],['NEH',8,10],['JHN',16,33],['PSA',55,22]];
 function votdRef(){var d=new Date(),start=new Date(d.getFullYear(),0,0),n=Math.floor((d-start)/864e5);return VOTD[n%VOTD.length]}
 function refName(code,ch,v){return BOOKS[bookIndex(code)][0]+' '+ch+(v?':'+v:'')}
+function tickBibleToday(){var d=S.days[keyOf(new Date())];if(d)d.items.forEach(function(i){if(i.kind==='bible'&&!i.chapters)i.done=true})}
 function chaptersPerDay(){var t=targetsFor(weekStart(todayKey())).bible;return Math.max(1,Math.ceil(t/7))}
 
 /* ---------- Days ---------- */
 function mk(kind,cat,text,time,extra){var o={id:uid(),kind:kind,cat:cat,text:text,time:time,done:false};for(var k in extra||{})o[k]=extra[k];return o}
 function dinnerPick(seed){var list=DINNERS.concat(S.favorites.map(function(f){return{n:f,d:'',t:0,k:'fav'}}));return list[Math.abs(seed)%list.length].n}
 function genDay(k,exclude){var s=S.settings,d=parseKey(k),dow=d.getDay(),items=[];
- var chs=nextChapters(chaptersPerDay(),exclude);
- items.push(mk('bible','faith','Bible: '+chText(chs),s.bible,{chapters:chs}));
+ items.push(mk('bible','faith','Bible reading',s.bible,{}));
  items.push(mk('prayer','faith','Prayer',s.bible));
  if(dow>=1&&dow<=5)items.push(mk('work','work','Work until '+t12(s.workEnd),s.workStart,{block:true}));
  var w=s.plan7[dow]||'rest';
@@ -290,7 +291,7 @@ function hourLabel(h){return (h%12||12)+(h<12?' AM':' PM')}
 function tlRange(){var s=S.settings,a=Math.min(6,+s.wake.split(':')[0]),b=Math.max(22,+s.bed.split(':')[0]);return[a,b]}
 function tiHtml(it,k,edit){var color=CAT[it.cat]||'var(--work)';
  if(edit){return '<div class="ti" data-id="'+it.id+'"><button class="handle" data-drag="'+k+'|'+it.id+'" aria-label="Drag '+esc(it.text)+'">'+ic('grip',18)+'</button><span class="c" style="background:'+color+'"></span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;padding:2px 0"><input class="et" aria-label="Activity" data-edit="'+k+'|'+it.id+'" value="'+esc(it.text)+'"><div class="row" style="gap:6px"><input class="tt" type="time" aria-label="Time" data-settime="'+k+'|'+it.id+'" value="'+(it.time||'')+'"><button class="mini" data-a="dupItem" data-k="'+k+'" data-id="'+it.id+'">Copy</button><button class="mini" data-a="rmItem" data-k="'+k+'" data-id="'+it.id+'" aria-label="Remove">✕</button></div></div></div>'}
- var extra='';if(it.kind==='bible'&&it.chapters&&it.chapters.length)extra=' <button class="btn link sm" style="min-height:26px;padding:0 2px" data-a="read" data-b="'+it.chapters[0][0]+'" data-c="'+it.chapters[0][1]+'">Read</button>';
+ var extra='';if(it.kind==='bible'){var nx1=it.chapters&&it.chapters.length?it.chapters[0]:nextChapters(1)[0];if(nx1)extra=' <button class="btn link sm" style="min-height:26px;padding:0 2px" data-a="read" data-b="'+nx1[0]+'" data-c="'+nx1[1]+'">Open Bible</button>'}
  if(it.block)return '<div class="ti blk"><span class="c" style="background:'+color+'"></span><span class="x">'+esc(it.text)+'</span><span class="tm">'+(it.time?t12(it.time):'')+'</span></div>';
  return '<label class="ti'+(it.done?' done':'')+'"><span class="c" style="background:'+color+'"></span><span class="x">'+esc(it.text)+extra+'</span><span class="tm">'+(it.time?t12(it.time,true):'')+'</span><input type="checkbox" data-toggle="'+k+'|'+it.id+'"'+(it.done?' checked':'')+' aria-label="Done: '+esc(it.text)+'"></label>'}
 function timeline(k,d,edit){var r=tlRange(),s=S.settings,ws=+s.workStart.split(':')[0],we=+s.workEnd.split(':')[0],dow=parseKey(k).getDay(),workday=dow>=1&&dow<=5&&d.items.some(function(i){return i.kind==='work'});
@@ -394,6 +395,7 @@ function vDay(){var k=route.k,d=S.days[k],tk=todayKey();
  var c=checkable(d.items),n=c.filter(function(i){return i.done}).length;
  h+='<div class="muted">'+(d.rest?'Rest day':n+' of '+c.length+' done')+'</div>';
  h+='<div class="between"><div class="lbl">Hour by hour</div><button class="btn '+(ui.edit===k?'dark':'')+' sm" data-a="editDay" data-k="'+k+'">'+(ui.edit===k?'Done':'Edit')+'</button></div>'+timeline(k,d,ui.edit===k)+addForm(k);
+ if(d.workout)h+='<div class="card"><div class="lbl" style="color:var(--bodyT)">Workout</div><div style="margin-top:2px"><b>'+esc(wName(d.workout.type))+'</b>'+(d.workout.min?', '+d.workout.min+' min':'')+'</div>'+(d.workout.notes?'<div class="small" style="white-space:pre-wrap;margin-top:4px">'+esc(d.workout.notes)+'</div>':'')+'</div>';
  var j=d.journal||{},parts=[['grateful','Grateful for'],['well','Went well'],['better','Do better'],['bible','Bible reflection'],['free','Free write']].filter(function(p){return j[p[0]]});
  h+='<div class="card"><div class="between"><div class="lbl">Journal</div><button class="btn link sm" data-a="openJournal" data-k="'+k+'">'+(parts.length?'Edit':'Write')+'</button></div>'+(parts.length?parts.map(function(p){return '<div style="margin-top:8px"><div class="small muted">'+p[1]+'</div><div style="font-family:var(--serif);font-size:16px;white-space:pre-wrap">'+esc(j[p[0]])+'</div></div>'}).join(''):'<div class="empty">No entry.</div>')+'</div>';
  return h+'</div>'+tabbar()}
@@ -444,9 +446,12 @@ function vFitness(){var tk=todayKey(),ws=weekStart(tk),st=weekStats(ws),tg=targe
  h+='</div>';
  var tw=(S.days[tk]||{}).workout;
  h+='<div><div class="lbl" style="margin-bottom:6px">Log today\'s session</div>'+(tw?'<div class="card between" style="margin-bottom:8px"><span>Logged: <b>'+wName(tw.type)+'</b>'+(tw.min?', '+tw.min+' min':'')+'</span><button class="btn link sm" data-a="unlog">Undo</button></div>':'')+
+  (tw?'<label class="lbl" for="wn2">What I did</label><textarea id="wn2" class="field" style="min-height:80px;margin:4px 0 8px;line-height:1.4" data-path="days.'+tk+'.workout.notes" placeholder="e.g. Squats 3x10, push-ups 3x12, 20 min treadmill">'+esc(tw.notes||'')+'</textarea>':'<label class="lbl" for="wnotes">What I did</label><textarea id="wnotes" class="field" style="min-height:80px;margin:4px 0 8px;line-height:1.4" placeholder="e.g. Squats 3x10, push-ups 3x12, 20 min treadmill">'+esc(ui.wnotes||'')+'</textarea>')+
   '<div class="row" style="margin-bottom:8px"><label for="mins" class="small" style="white-space:nowrap">Minutes (optional)</label><input id="mins" type="number" inputmode="numeric" class="field" style="width:100px" placeholder="30"></div>'+
   '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">'+Object.keys(allW()).filter(function(w){return w!=='rest'}).map(function(w){return '<button class="btn" style="min-height:52px" data-a="logW" data-w="'+w+'">'+esc(wName(w))+'</button>'}).join('')+'</div>'+
   '<button class="btn link sm" style="margin-top:6px" data-a="restDay" data-k="'+tk+'">Not feeling well? Mark today as a rest day</button></div>';
+ var hist=Object.keys(S.days).filter(function(k){return S.days[k].workout}).sort().reverse().slice(0,10);
+ h+='<div><div class="lbl" style="margin-bottom:4px">Recent sessions</div>'+(hist.length?'<div class="list">'+hist.map(function(k){var w=S.days[k].workout;return '<div style="padding:10px 0;border-bottom:1px solid var(--rule2)"><div class="between"><b>'+esc(wName(w.type))+(w.min?', '+w.min+' min':'')+'</b><span class="small muted">'+shortDate(k)+'</span></div>'+(w.notes?'<div class="small" style="white-space:pre-wrap;margin-top:2px">'+esc(w.notes)+'</div>':'')+'</div>'}).join('')+'</div>':'<div class="empty">Your logged workouts will show here.</div>')+'</div>';
  var lastW=S.weights[S.weights.length-1];
  h+='<div class="card"><div class="between"><div class="lbl">Weekly weigh-in</div>'+(lastW?'<span class="small muted">Last: '+lastW.lb+' lb, '+shortDate(lastW.date)+'</span>':'')+'</div>'+lineChart(S.weights.slice(-12))+'<div class="row" style="margin-top:6px"><label for="wt" style="flex:1">Weight today</label><input id="wt" type="number" inputmode="decimal" step="0.1" class="field" style="width:100px" placeholder="lb"><button class="btn dark" data-a="saveW">Save</button></div></div>';
  h+='<div class="card" style="border-color:var(--bodyT)"><div class="lbl" style="color:var(--bodyT)">Pinned</div><div style="margin-top:2px">Get abdominal size and early fullness checked by a doctor.</div><div class="row" style="gap:20px;margin-top:8px"><label class="row" style="gap:8px;min-height:36px"><input type="checkbox" data-doc="booked"'+(S.doctor.booked?' checked':'')+'>Booked</label><label class="row" style="gap:8px;min-height:36px"><input type="checkbox" data-doc="done"'+(S.doctor.done?' checked':'')+'>Done</label></div></div>';
@@ -524,15 +529,15 @@ var A={
  openDay:function(el){go('day',{k:el.dataset.k})},
  planDay:function(el){var k=el.dataset.k;if(k===addDays(todayKey(),1)){go('plan');return}getDay(k,true);render(true)},
  openJournal:function(el){go('journal',{k:el.dataset.k})},
- markNext:function(){var nx=nextChapters(chaptersPerDay()),tk=todayKey();nx.forEach(function(c){setRead(c[0],c[1],true,tk)});var d=S.days[tk];if(d)d.items.forEach(function(i){if(i.kind==='bible'&&i.chapters&&i.chapters.every(function(c){return isRead(c[0],c[1])}))i.done=true});save();render(true);toast('Marked '+chText(nx))},
- ch:function(el){var code=el.dataset.b,c=+el.dataset.c,on=!isRead(code,c);setRead(code,c,on,todayKey());save();render(true)},
+ markNext:function(){var nx=nextChapters(chaptersPerDay()),tk=todayKey();nx.forEach(function(c){setRead(c[0],c[1],true,tk)});var d=S.days[tk];if(d)d.items.forEach(function(i){if(i.kind==='bible'&&i.chapters&&i.chapters.every(function(c){return isRead(c[0],c[1])}))i.done=true});tickBibleToday();save();render(true);toast('Marked '+chText(nx))},
+ ch:function(el){var code=el.dataset.b,c=+el.dataset.c,on=!isRead(code,c);setRead(code,c,on,todayKey());if(on)tickBibleToday();save();render(true)},
  setCurrent:function(el){S.bible.current=+el.dataset.i;save();render(true);toast('Next reading updated')},
  read:function(el){var from=route.name==='read'?route.from:route.name;go('read',{b:el.dataset.b,c:el.dataset.c,from:from==='today'||from==='bible'||from==='journal'?from:'bible'})},
- readMark:function(el){var code=el.dataset.b,c=+el.dataset.c,on=!isRead(code,c),tk=todayKey();setRead(code,c,on,tk);var d=S.days[tk];if(d)d.items.forEach(function(i){if(i.kind==='bible'&&i.chapters)i.done=i.chapters.every(function(x){return isRead(x[0],x[1])})});save();render(true);if(on)toast(refName(code,c)+' marked read')},
+ readMark:function(el){var code=el.dataset.b,c=+el.dataset.c,on=!isRead(code,c),tk=todayKey();setRead(code,c,on,tk);var d=S.days[tk];if(d)d.items.forEach(function(i){if(i.kind==='bible'&&i.chapters)i.done=i.chapters.every(function(x){return isRead(x[0],x[1])})});if(on)tickBibleToday();save();render(true);if(on)toast(refName(code,c)+' marked read')},
  rsize:function(el){S.settings.readSize=Math.max(15,Math.min(26,(S.settings.readSize||19)+2*(+el.dataset.d)));save();render(true)},
  bt:function(el){ui.bibleT=+el.dataset.t;render(true)},
  book:function(el){ui.book=+el.dataset.i;render(false)},
- logW:function(el){var tk=todayKey(),d=getDay(tk,true),m=+document.getElementById('mins').value||0,w=el.dataset.w;d.workout={type:w,min:m};var g=d.items.filter(function(i){return i.kind==='gym'})[0];if(g)g.done=true;else d.items.push(mk('gym','body',wName(w),S.settings.gym,{done:true,workoutType:w}));d.rest=false;save();render(true);toast(wName(w)+' logged')},
+ logW:function(el){var tk=todayKey(),d=getDay(tk,true),m=+document.getElementById('mins').value||0,w=el.dataset.w,nt=document.getElementById('wnotes');d.workout={type:w,min:m,notes:nt?nt.value:''};ui.wnotes='';var g=d.items.filter(function(i){return i.kind==='gym'})[0];if(g)g.done=true;else d.items.push(mk('gym','body',wName(w),S.settings.gym,{done:true,workoutType:w}));d.rest=false;save();render(true);toast(wName(w)+' logged')},
  unlog:function(){var d=S.days[todayKey()];if(d){delete d.workout;d.items.forEach(function(i){if(i.kind==='gym')i.done=false})}save();render(true)},
  saveW:function(){var v=parseFloat(document.getElementById('wt').value);if(!(v>50&&v<700)){toast('Enter your weight in pounds');return}var tk=todayKey();S.weights=S.weights.filter(function(w){return w.date!==tk});S.weights.push({date:tk,lb:Math.round(v*10)/10});S.weights.sort(function(a,b){return a.date.localeCompare(b.date)});save();render(true);toast('Weight saved')},
  dk:function(el){ui.dinnerKind=el.dataset.k;ui.dinnerIdx=0;render(true)},
@@ -573,6 +578,7 @@ document.addEventListener('change',function(e){var t=e.target;
 });
 document.addEventListener('input',function(e){var t=e.target;
  if(t.dataset.path&&t.type!=='time'){setPath(t.dataset.path,t.value);return}
+ if(t.id==='wnotes'){ui.wnotes=t.value;return}
  if(t.dataset.edit){var q2=t.dataset.edit.split('|'),i2=findItem(q2[0],q2[1]);if(i2){i2.text=t.value;save()}return}
  if(t.dataset.draft&&ui.draft){ui.draft.day[t.dataset.draft]=t.value;return}
  if(t.hasAttribute('data-search')){ui.q=t.value;var k=route.k||todayKey(),q=ui.q.toLowerCase();
@@ -600,7 +606,7 @@ render(false);
   cloud.col=db.collection('data/users/'+uid);setCloud('loading');var to=setTimeout(function(){setCloud('error')},10000);
   var snap=await cloud.col.get();clearTimeout(to);var core=null,days={};
   snap.docs.forEach(function(d){var x=d.data()||{};if(d.id==='core'&&x.state){core=JSON.parse(x.state);cloud.synced.core=x.state}else if(d.id.indexOf('m-')===0&&x.days){cloud.synced[d.id]=x.days;var dd=JSON.parse(x.days);for(var k in dd)days[k]=dd[k]}});
-  if(core){S=merge(defaults(),core);S.days=days;applyFresh();try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}if(S.setup&&route.name==='setup')route={name:'today'}}
+  if(core){S=merge(defaults(),core);S.days=days;applyFresh();migrateBible();try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}if(S.setup&&route.name==='setup')route={name:'today'}}
   cloud.ready=true;setCloud('ok');cloudPush();render(true)
  }catch(e){setCloud('error')}})();
 </script>
