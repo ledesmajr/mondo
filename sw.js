@@ -1,5 +1,5 @@
 // MONDO offline support: caches the app so it opens without internet.
-var CACHE = 'mondo-v3';
+var CACHE = 'mondo-v4';
 var CORE = ['./', './index.html', './manifest.json', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(CORE); }).then(function () { return self.skipWaiting(); }));
@@ -16,7 +16,7 @@ self.addEventListener('fetch', function (e) {
   if (url.origin !== location.origin && !isFont) return;
   if (e.request.mode === 'navigate') {
     // Network first for the page so updates arrive; fall back to the cached copy offline.
-    e.respondWith(fetch(e.request).then(function (r) {
+    e.respondWith(fetch(e.request.url, { cache: 'no-store' }).then(function (r) {
       var copy = r.clone(); caches.open(CACHE).then(function (c) { c.put('./index.html', copy); }); return r;
     }).catch(function () { return caches.match('./index.html'); }));
     return;
